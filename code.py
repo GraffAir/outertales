@@ -13,7 +13,7 @@ pygame.display.set_caption("Outer Tales")
 taille_case = 40
 
 class Joueur(pygame.sprite.Sprite):
-    """classe pour gérer le joueur (déplacements, animations, interactions..."""
+    """classe pour gérer le joueur (déplacements, animations, interactions...)"""
     def __init__(self, x, y):
         """choisir l'image du joueur, établir sa position de base..."""
         self.image = pygame.transform.scale(pygame.image.load("personnage.png"), (40, 40))
@@ -21,26 +21,27 @@ class Joueur(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
     
-    def update(self):
+    def deplacements(self):
         """gérer ses déplacements ainsi que les animations"""
         dx = 0
         dy = 0
-        vitesse = 5
+        vitesse = 2.5
+        
         key = pygame.key.get_pressed()
         if key[pygame.K_UP] or key[pygame.K_z]:
-            dy -= vitesse
+            dy -= vitesse * 1.2 #on * par 1.2 car sinon, la vitesse est moins rapide que vers le bas
         if key[pygame.K_DOWN] or key[pygame.K_s]:
             dy += vitesse
+        if key[pygame.K_LEFT] or key[pygame.K_q]:
+            dx -= vitesse * 1.2 #on * par 1.2 car sinon, la vitesse est moins rapide que vers la droite
         if key[pygame.K_RIGHT] or key[pygame.K_d]:
             dx += vitesse
-        if key[pygame.K_LEFT] or key[pygame.K_q]:
-            dx -= vitesse
-        
+
         self.rect.y += dy
         self.rect.x += dx
         
         fenetre.blit(self.image, self.rect)
-
+        
 class Map:
     """classe pour pouvoir dessiner la salle"""
     def __init__(self, liste):
@@ -48,6 +49,7 @@ class Map:
         self.liste_cases = []
         #charger les images des blocs
         mur_img = pygame.image.load("mur.png")
+        
         lignes_count = 0
         for lignes in liste:
             col_count = 0
@@ -75,16 +77,17 @@ def import_salle(numero):
         salle = pickle.load(pickle_in)
     return Map(salle)
 
-bg_img = pygame.transform.scale(pygame.image.load("herbe.png"), (1280, 720))
+bg_img = pygame.transform.scale(pygame.image.load("herbe.jpg"), (1280, 720))
 joueur = Joueur(50, 50)
 joueur_group = pygame.sprite.Group()
+
 #lancer la boucle du jeu
 run = True
 while run:
     clock.tick(fps)
-    #enetre.blit(bg_img, (0, 0))
-    joueur.update()
+    fenetre.blit(bg_img, (0, 0))
     import_salle(1).draw()
+    joueur.deplacements()
     #joueur_group.draw(fenetre)
     #permet de  quitter le jeu
     for event in pygame.event.get():
