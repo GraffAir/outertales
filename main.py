@@ -68,13 +68,13 @@ while run:
         room = rooms[room_y][room_x]
         #changer le numéro de salle
         row_count = 0
-        compter = 1
+        counter = 1
         for row in rooms:
             col_count = 0
             for room_ in row:
                 if room_ == rooms[room_y][room_x]:
-                    room_num = compter
-                compter += 1
+                    room_num = counter
+                counter += 1
                 col_count += 1
             row_count += 1
         #la dessiner maintenant
