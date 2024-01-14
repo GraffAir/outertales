@@ -85,27 +85,55 @@ class Player:
     def collisions_exits(self, exit):
         """gérer les collisions avec les sorties salles pour changer la salle affichée"""
         if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
-            #on vérifie si le joueur à le niveau de pass recquis
-            if self.room_badge >= int(exit.value[1]):
+            #on vérifie si le joueur à le niveau de pass requis
+            if self.room_badge >= int(exit.value) and pygame.key.get_pressed()[pygame.K_e]:
                 #en fonction de ou mène la porte, on attribue des coordonnées au joueur qui sont différentes
-                if exit.value[0] == 'X':
-                    self.room_x += 1
-                    self.rect.x = 40
-                elif exit.value[0] == 'x':
-                    self.room_x -= 1
-                    self.rect.x = 1280 - 40 * 2
-                elif exit.value[0] == 'Y':
-                    self.room_y += 1
-                    self.rect.y = 40
-                elif exit.value[0] == 'y':
-                    self.room_y -= 1
-                    self.rect.y = 720 - 40 * 2
+                exit.open = True
+            #     if exit.direction == "O":
+            #         #self.room_x += 1
+            #         #self.rect.x = 40
+            #         exit.rect.y -= 80
+            #     elif exit.direction == "E":
+            #         # self.room_x -= 1
+            #         # self.rect.x = 1280 - 40 * 2
+            #         exit.rect.y -= 80
+            #     elif exit.value[0] == 'Y':
+            #         # self.room_y += 1
+            #         # self.rect.y = 40
+            #         exit.rect.x += 80
+            #     elif exit.value[0] == 'y':
+            #         # self.room_y -= 1
+            #         # self.rect.y = 720 - 40 * 2
+            #         exit.rect.x += 80
+            #     exit.open = True
             else:
-                #si le joueur n'a pas un niveau de pass recquis, alors pas de déplacement
-                if exit.value[0] in ["X", "x"]:
+                #si le joueur n'a pas un niveau de pass requis, alors pas de déplacement
+                if exit.direction in ["O", "E"]:
                     self.dx = 0
-                elif exit.value[0] in ["Y", 'y']:
+                elif exit.direction in ["N", 'S']:
                     self.dy = 0
+
+        # if exit.open == True:
+        #     exit.timer += 1
+        #     if exit.timer == 150:
+        #         exit.open = False
+        #         exit.timer = 0
+        #         if exit.value[0] == 'X':
+        #             #self.room_x += 1
+        #             #self.rect.x = 40
+        #             exit.rect.y += 80
+        #         elif exit.value[0] == 'x':
+        #             # self.room_x -= 1
+        #             # self.rect.x = 1280 - 40 * 2
+        #             exit.rect.y += 80
+        #         elif exit.value[0] == 'Y':
+        #             # self.room_y += 1
+        #             # self.rect.y = 40
+        #             exit.rect.x -= 80
+        #         elif exit.value[0] == 'y':
+        #             # self.room_y -= 1
+        #             # self.rect.y = 720 - 40 * 2
+        #             exit.rect.x -= 80
 
     def collisions_items(self, item):
         """les collisions avec les items au sols"""
@@ -173,6 +201,19 @@ class Player:
         
         #on utilise les items
         self.use_items()
+
+        if self.rect.x > 1240:
+            self.room_x += 1
+            self.rect.x = 40
+        elif self.rect.x < 0:
+            self.room_x -= 1
+            self.rect.x = 1280 - 40 * 2
+        elif self.rect.y > 680:
+            self.room_y += 1
+            self.rect.y = 40
+        elif self.rect.y < 0:
+            self.room_y -= 1
+            self.rect.y = 720 - 40 * 2
 
         #déplacer le joueur et le dessiner
         self.rect.x += self.dx

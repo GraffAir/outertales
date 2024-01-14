@@ -38,6 +38,10 @@ room_num = 1
 #celle du sol
 bg_img = pygame.transform.scale(pygame.image.load("images/floor.jpg"), (1280, 720))
         
+
+def affichage(x, y, num):
+   screen.blit(pygame.image.load(f"images/print_pass{num}.png"), (x, y))
+
 def import_room(num):
     if path.exists(f"rooms/room{num}.bin"):
         pickle_in = open(f"rooms/room{num}.bin", "rb")
@@ -51,7 +55,7 @@ rooms = [
 
 #on définit la salle de base et on la dessine
 room = rooms[room_y][room_x]
-room_draw = map.Map(room, items, room_num, tile_size,)
+room_draw = map.Map(room, items, room_num, tile_size)
 exits, items_map = room_draw.replace()
 
 #on initialise le joueur
@@ -89,6 +93,7 @@ while run:
 
     #afficher les portes de sortie
     for exit in exits:
+        exit.update()
         exit.draw(screen)
 
     #afficher les items
@@ -98,6 +103,9 @@ while run:
     #mettre à jour le joueur    
     player.update(screen, room_draw, items, items_map, exits, room_badge, room_x, room_y)
     exits, items_map, items, room_badge, room_x, room_y  = player.replace()
+
+    if room_badge > 0:
+        affichage(1000, 500, room_badge)
     
     #permet de  quitter le jeu
     for event in pygame.event.get():
