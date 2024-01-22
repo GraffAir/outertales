@@ -14,13 +14,14 @@ class Map:
         counter = 0
 
         #charger les images des blocs
-        mur_img = pygame.transform.scale(pygame.image.load("images/map/mur2.png"), (tile_size, tile_size))
-        coin_img = pygame.transform.scale(pygame.image.load("images/map/coin3.png"), (tile_size, tile_size))       
+        mur_img = pygame.transform.scale(pygame.image.load("images/map/mur.png"), (tile_size, tile_size))
+        coin_img = pygame.transform.scale(pygame.image.load("images/map/coin.png"), (tile_size, tile_size))       
 
         #pour modifier les valeurs
-        self.exits = exits
-        self.items_map = items_map
-    
+        self.exits, self.items_map = exits, items_map
+        exit_dir = 'left'
+        x_ = 0
+        y_ = 0
         #parcourir la liste
         row_count = 0
         for row in liste:
@@ -46,25 +47,37 @@ class Map:
                     elif (0 < row_count < 17) and col_count == 31:
                         img = pygame.transform.rotate(mur_img, 90)
                     img_rect = img.get_rect()
-                    img_rect.x = col_count * tile_size
-                    img_rect.y = row_count * tile_size
-                    # if (row_count == 0 and (0 < col_count < 31)) or ((0 < row_count < 17) and col_count == 0) or (row_count == 17 and (0 < col_count < 31)) or ((0 < row_count < 17) and col_count == 31):
-                    #     pass
-                    # else:
-                    #     img_rect.x -= 1
-                    #     img_rect.y -= 1
+                    img_rect.x, img_rect.y = col_count * tile_size, row_count * tile_size
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
                 #si elle commence par x, X, y ou Y, alors c'est une porte vers une autre salle
                 elif str(tile)[0] == "E":
+                    x_, y_ = 0, 0
+                    if row_count == 0 or row_count == 17:
+                        if col_count == 15:
+                            exit_dir = "left"
+                        elif col_count == 16:
+                            exit_dir = "right"
                     if row_count == 0:
-                        exit = Exit(col_count * tile_size, row_count * tile_size + tile_size - 4, "N", tile[1])
-                    elif row_count == 17:
-                        exit = Exit(col_count * tile_size, row_count * tile_size, "S", tile[1])
+                        y_ = tile_size - 4
+                    elif col_count == 0 or col_count == 31:
+                        if row_count == 8:
+                            exit_dir = "top"
+                            link = 3
+                        elif row_count == 9:
+                            exit_dir = "bottom"
+                            link = 4
+                    if col_count == 0:
+                        x_ = tile_size - 4
+                    if row_count == 0:
+                        link = 1
+                    elif row_count == 15:
+                        link = 2
                     elif col_count == 0:
-                        exit = Exit(col_count * tile_size + tile_size - 4, row_count * tile_size, "O", tile[1])
+                        link = 3
                     elif col_count == 31:
-                        exit = Exit(col_count * tile_size, row_count * tile_size, "E", tile[1])
+                        link = 4
+                    exit = Exit(col_count * tile_size + x_, row_count * tile_size + y_, exit_dir, tile[1], link)
                     self.exits.append(exit)
                 #si elle commence par un O, c'est un objet ramassable
                 elif str(tile)[0] == "O":
@@ -97,51 +110,95 @@ class Map:
 
 class Exit:
     """classe pour gérer les changements de salle"""
-    def __init__(self, x, y, dir, val):
+    def __init__(self, x, y, dir, val, link):
         img = pygame.image.load("images/exit.png")
         #en fonction de si la porte est à droite et à gauche ou en haut et en bas, la porte est un rectangle plus long en longueur ou en hauteur
-        if dir in ["O", "E"]: #On répère l'image à dessiner en fonction du point cardinal O, E, S, N
+        if dir in ["top", "bottom"]: #On répère l'image à dessiner en fonction du point cardinal O, E, S, N
             self.image = pygame.transform.scale(img, (4, 40))
-        elif dir in ["N", "S"]:
+        elif dir in ["left", "right"]:
             self.image = pygame.transform.scale(img, (40, 4))
         #les coordonnées
         self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
+        self.rect.x, self.rect.y = x, y
         #la valeur d'une porte c'est un chiffre qui indique quel niveau de pass il faut pour la franchir
         self.value = val
-        #pour indiquer vers ou mène la porte
+        #pour indiquer vers ou mène la porte, et a quel groupe elle appartient
         self.direction = dir
-
+        self.link = link
+        #définir la position de départ et celle d'arrivée
+        self.start_pos = (x, y)
+        if self.direction == 'right':
+            self.end_pos = (x + 40, y)
+        elif self.direction == 'left':
+            self.end_pos = (x - 40, y)
+        elif self.direction == 'top':
+            self.end_pos = (x, y - 40)
+        elif self.direction == 'bottom':
+            self.end_pos = (x, y + 40)
+        #variables pour l'ouverture des portes
         self.open = False
-        self.timer = 0
-        self.depla = False
+        self.counter = 0
+        self.go_back = False
+        self.collisions_counter = 0
         
-    def update(self):
-        """methode pour faire déplacer les portes, et les faire revenir à leurs positions"""
-        # dx = 0
-        # dy = 0
-        # if self.open == True and self.depla == False:
-        #     if self.direction in ["O", "E"]:
-        #         self.rect.y -= 80
-        #         dy = 1
-        #     elif self.direction in ["N", "S"]:
-        #         self.rect.x += 80
-        #         dy = 1
-        #     self.depla = True
-        # elif self.open == True and self.depla == True:
-        #     self.timer += 1
-        #     if self.timer >= 150:
-        #         if player.rect.colliderect(self.rect.x + dx, self.rect.y + dy, self.image.get_width(), self.image.get_height()) == False:
-        #             if self.direction in ["O", "E"]:
-        #                 self.rect.y += 1
-        #             elif self.direction in ["N", "S"]:
-        #                 self.rect.x -= 1
+    def open_door(self):
+        """ouvrir la porte"""
+        if self.direction == 'top':
+            self.dy = -1
+        elif self.direction == "bottom":
+            self.dy = 1
+        elif self.direction == "left":
+            self.dx = -1
+        elif self.direction == "right":
+            self.dx = 1
 
-        # self.timer = 0
-        # self.depla = False
-        # self.open = False
-        pass
+    def close_door(self):
+        """fermer la porte"""
+        if self.direction == 'top':
+            self.dy = 1
+        elif self.direction == "bottom":
+            self.dy = -1
+        elif self.direction == "left":
+            self.dx = 1
+        elif self.direction == "right":
+            self.dx = -1
+
+    def check_collisions_player(self, player):
+        """vérifier les colisions avec le joueur"""
+        if player.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+            self.dx, self.dy = 0, 0
+            self.collisions_counter += 1
+
+    def reset(self):
+        """remettre à 0 certaines variables une fois la porte refermé"""
+        self.counter = 0
+        self.go_back, self.open = False, False
+        self.collisions_counter = 0
+
+    def update(self, player):
+        """methode pour faire déplacer les portes, et les faire revenir à leurs positions"""
+        self.dx, self.dy = 0, 0
+
+        #ouvrir la porte
+        if self.open == True and self.go_back == False:
+            self.open_door()
+
+        #déplacer la porte dans l'autre sens, une fois la position de fin atteinte
+        if self.end_pos == (self.rect.x + self.dx, self.rect.y + self.dy):
+            self.go_back = True
+
+        if self.open == True and self.go_back == True:
+            self.counter += 1
+            if self.counter >= 150:
+                self.close_door()
+                self.check_collisions_player(player)
+
+        self.rect.x += self.dx
+        self.rect.y += self.dy
+
+        #si la porte est réfermé, remettre à 0 les variables
+        if self.start_pos == (self.rect.x, self.rect.y):
+            self.reset()
 
     def draw(self, screen):
         """dessiner la porte de sortie"""
@@ -155,8 +212,7 @@ class Item:
         self.image = pygame.transform.scale(img, (40, 40))
         #les coordonnées
         self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
+        self.rect.x, self.rect.y = x, y
 
         #sa valeur (ex : un pass de niveau 3)
         self.value = image1[1:]

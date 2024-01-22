@@ -19,14 +19,9 @@ tile_size = 40
 #les variables
 
 #pour se réperer dans la liste des salles
-room_x = 0
-room_y = 0
-#les portes de sorties à considérer en collisions
-exits = []
-#les items actuellement au sol
-items_map = []
-#les items détenus par le joueur
-items = []
+room_x, room_y = 0, 0
+#les portes de sorties à considérer en collisions, les items au sol et ceux de l'inventaire
+exits, items_map, items = [], [], []
 #le niveau de pass pour passer les portes
 room_badge = 0
 #la salle actuelle et son numéro d'identification
@@ -59,13 +54,13 @@ room_draw = map.Map(room, items, room_num, tile_size)
 exits, items_map = room_draw.replace()
 
 #on initialise le joueur
-player = player.Player(40, 40)
+player = player.Player(1000, 400)
 
 #lancer la boucle du jeu
 run = True
 while run:
     #régler la clock sur 60 fps
-    clock.tick(60)
+    clock.tick(fps)
 
     #changer de map si nécessaire
     if room != rooms[room_y][room_x]:
@@ -91,10 +86,15 @@ while run:
     #dessine la map
     room_draw.draw(screen)
 
-    #afficher les portes de sortie
+    #afficher les portes de sortie, et les faire bouger si nécessaire
     for exit in exits:
-        exit.update()
+        exit.update(player)
         exit.draw(screen)
+        for exit_ in exits:
+            if exit.collisions_counter == exit_.collisions_counter:
+                if exit.open == True:
+                    if exit.link == exit_.link:
+                        exit_.open = True
 
     #afficher les items
     for item in items_map:
@@ -104,6 +104,7 @@ while run:
     player.update(screen, room_draw, items, items_map, exits, room_badge, room_x, room_y)
     exits, items_map, items, room_badge, room_x, room_y  = player.replace()
 
+    #afficher le niveau de badge
     if room_badge > 0:
         affichage(1000, 500, room_badge)
     

@@ -5,10 +5,7 @@ class Player:
     def __init__(self, x, y):
         """choisir l'image du joueur, établir sa position de base..."""
         #définir les listes qui contiennent les images du joueur qu'on va animer
-        self.images_walk_right = []
-        self.images_walk_left = []
-        self.images_walk_up = []
-        self.images_walk_down = []
+        self.images_walk_right, self.images_walk_left, self.images_walk_up, self.images_walk_down = [], [], [], []
 
         #pour chaque liste, on a une série d'images, et on va faire en sorte que l'image du joueur varie d'une image à l'autre pour simuler un GIF
         for number in range(1, 5):
@@ -33,8 +30,7 @@ class Player:
 
         #pouvoir changer les coordonnées
         self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
+        self.rect.x, self.rect.y = x, y
 
         #la vitesse de déplacement
         self.speed = 4
@@ -77,11 +73,22 @@ class Player:
     def collisions_map(self, tile):
         """gérer les collisions avec les blocs"""
         #si le déplacement n'est pas possible car collisions, alors il ne se déplace pas
-        if tile[1].colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()):
-            self.dx = 0
-        if tile[1].colliderect(self.rect.x, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
-            self.dy = 0
-    
+        dx_test, dy_test = self.dx, self.dy
+        if tile[1].colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()) == False:
+            if tile[1].colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+                if tile[1][0] != self.rect.x + 40 and tile[1][1] != self.rect.y - 40:
+                    dy_test = 0
+        else:
+            dx_test = 0
+        if tile[1].colliderect(self.rect.x, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()) == False:
+            if tile[1].colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+                if tile[1][0] != self.rect.x - 40 and tile[1][1] != self.rect.y + 40:
+                    dx_test = 0
+        else:
+            dy_test = 0
+        self.dx, self.dy = dx_test, dy_test
+
+
     def collisions_exits(self, exit):
         """gérer les collisions avec les sorties salles pour changer la salle affichée"""
         if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
@@ -89,51 +96,21 @@ class Player:
             if self.room_badge >= int(exit.value) and pygame.key.get_pressed()[pygame.K_e]:
                 #en fonction de ou mène la porte, on attribue des coordonnées au joueur qui sont différentes
                 exit.open = True
-            #     if exit.direction == "O":
-            #         #self.room_x += 1
-            #         #self.rect.x = 40
-            #         exit.rect.y -= 80
-            #     elif exit.direction == "E":
-            #         # self.room_x -= 1
-            #         # self.rect.x = 1280 - 40 * 2
-            #         exit.rect.y -= 80
-            #     elif exit.value[0] == 'Y':
-            #         # self.room_y += 1
-            #         # self.rect.y = 40
-            #         exit.rect.x += 80
-            #     elif exit.value[0] == 'y':
-            #         # self.room_y -= 1
-            #         # self.rect.y = 720 - 40 * 2
-            #         exit.rect.x += 80
-            #     exit.open = True
-            else:
                 #si le joueur n'a pas un niveau de pass requis, alors pas de déplacement
-                if exit.direction in ["O", "E"]:
-                    self.dx = 0
-                elif exit.direction in ["N", 'S']:
-                    self.dy = 0
-
-        # if exit.open == True:
-        #     exit.timer += 1
-        #     if exit.timer == 150:
-        #         exit.open = False
-        #         exit.timer = 0
-        #         if exit.value[0] == 'X':
-        #             #self.room_x += 1
-        #             #self.rect.x = 40
-        #             exit.rect.y += 80
-        #         elif exit.value[0] == 'x':
-        #             # self.room_x -= 1
-        #             # self.rect.x = 1280 - 40 * 2
-        #             exit.rect.y += 80
-        #         elif exit.value[0] == 'Y':
-        #             # self.room_y += 1
-        #             # self.rect.y = 40
-        #             exit.rect.x -= 80
-        #         elif exit.value[0] == 'y':
-        #             # self.room_y -= 1
-        #             # self.rect.y = 720 - 40 * 2
-        #             exit.rect.x -= 80
+        dx_test, dy_test = self.dx, self.dy
+        if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()) == False:
+            if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+                if exit.rect.x != self.rect.x + 40 and exit.rect.y != self.rect.y - 40:
+                    dy_test = 0
+        else:
+            dx_test = 0
+        if exit.rect.colliderect(self.rect.x, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()) == False:
+            if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+                if exit.rect.x != self.rect.x - 40 and exit.rect.y != self.rect.y + 40:
+                    dx_test = 0
+        else:
+            dy_test = 0
+        self.dx, self.dy = dx_test, dy_test
 
     def collisions_items(self, item):
         """les collisions avec les items au sols"""
@@ -154,16 +131,10 @@ class Player:
     def update(self, screen, room_draw, items, items_map, exits, room_badge, room_x, room_y):
         """gérer tous les évènements"""
         #on crée un objet avec self pour pouvoir changer les variables avec la méthode replace
-        self.exits = exits
-        self.items_map = items_map
-        self.items = items
-        self.room_badge = room_badge
-        self.room_x = room_x
-        self.room_y = room_y
+        self.exits, self.items_map, self.items, self.room_badge, self.room_x, self.room_y = exits, items_map, items, room_badge, room_x, room_y
 
         #les variables qui symbolise le déplacement qui sera réalisé si possible
-        self.dx = 0
-        self.dy = 0
+        self.dx, self.dy = 0, 0
         #on vérifie s'il appuie sur les touches de déplacements
         key = pygame.key.get_pressed()
         if key[pygame.K_UP]:
