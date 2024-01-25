@@ -5,6 +5,7 @@ import pickle
 from os import path
 import map
 import player
+import pancarte
 
 #initialiser pygame
 pygame.init()
@@ -55,15 +56,19 @@ exits, items_map = room_draw.replace()
 
 #on initialise le joueur
 player = player.Player(1000, 400)
+pan = pancarte.Pancarte("abruaat", 100, 100)
 
 #lancer la boucle du jeu
 run = True
 while run:
     #régler la clock sur 60 fps
     clock.tick(fps)
+    #afficher le sol
+    screen.blit(bg_img, (0, 0))
 
     #changer de map si nécessaire
     if room != rooms[room_y][room_x]:
+        pan.draw(screen)
         room = rooms[room_y][room_x]
         #changer le numéro de salle
         row_count = 0
@@ -80,8 +85,6 @@ while run:
         room_draw = map.Map(room, items, room_num, tile_size)
         exits, items_map = room_draw.replace()
 
-    #afficher le sol
-    screen.blit(bg_img, (0, 0))
 
     #dessine la map
     room_draw.draw(screen)
