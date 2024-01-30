@@ -32,7 +32,7 @@ room_num = 1
 #charger les images
 
 #celle du sol
-bg_img = pygame.transform.scale(pygame.image.load("images/floor.jpg"), (1280, 720))
+bg_img = pygame.transform.scale(pygame.image.load("images/map/floor.png"), (1280, 720))
         
 
 def affichage(x, y, num):
