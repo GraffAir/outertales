@@ -35,6 +35,9 @@ class Player:
         #la vitesse de déplacement
         self.speed = 4
 
+        #pour les panneaux
+        self.sign_counter = 100
+
     def move_left(self):
         """gérer le déplacement vers la gauche"""
         self.dx -= self.speed
@@ -118,6 +121,33 @@ class Player:
         if item.rect.colliderect(self.rect.x, self.rect.y, self.image.get_width(), self.image.get_height()):
             self.items.append(item)
             self.items_map.remove(item)
+        
+    def collisions_signs(self, sign):
+
+        # dx_test, dy_test = self.dx, self.dy
+        # if sign.rect.colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()) == False:
+        #     if sign.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+        #         if sign.rect.x != self.rect.x + 40 and sign.rect.y != self.rect.y - 40:
+        #             dy_test = 0
+        # else:
+        #     dx_test = 0
+        # if sign.rect.colliderect(self.rect.x, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()) == False:
+        #     if sign.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+        #         if sign.rect.x != self.rect.x - 40 and sign.rect.y != self.rect.y + 40:
+        #             dx_test = 0
+        # else:
+        #     dy_test = 0
+        # self.dx, self.dy = dx_test, dy_test
+
+        if sign.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+            if self.sign_counter >= 50:
+                if pygame.key.get_pressed()[pygame.K_e]:
+                    if sign.draw == False:
+                        sign.draw = True
+                    else:
+                        sign.draw = False
+                    self.sign_counter = 0
+        self.sign_counter += 1
 
     def use_items(self):
         "une fois un item dans l'inventaire, on peut l'utiliser (une clé par exemple augmente le niveau de pass pour les sorties)"
@@ -128,10 +158,10 @@ class Player:
                 keys.append(int(item.value[3]))
                 self.room_badge = max(keys)
 
-    def update(self, screen, room_draw, items, items_map, exits, room_badge, room_x, room_y):
+    def update(self, screen, room_draw, items, items_map, exits, signs, room_badge, room_x, room_y):
         """gérer tous les évènements"""
         #on crée un objet avec self pour pouvoir changer les variables avec la méthode replace
-        self.exits, self.items_map, self.items, self.room_badge, self.room_x, self.room_y = exits, items_map, items, room_badge, room_x, room_y
+        self.exits, self.items_map, self.items, self.signs, self.room_badge, self.room_x, self.room_y = exits, items_map, items, signs, room_badge, room_x, room_y
 
         #les variables qui symbolise le déplacement qui sera réalisé si possible
         self.dx, self.dy = 0, 0
@@ -169,6 +199,9 @@ class Player:
         #et le collisions avec les items au sol
         for item in self.items_map:
             self.collisions_items(item)
+
+        for sign in signs:
+            self.collisions_signs(sign)
         
         #on utilise les items
         self.use_items()

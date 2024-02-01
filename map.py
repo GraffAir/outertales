@@ -5,20 +5,18 @@ class Map:
     def __init__(self, liste, items, room_num, tile_size):
         """créer une liste contient les images et les coordonnées à dessiner"""
         self.tile_list = []
-        #pour les portes de sorties
-        exits = []
 
         #pour les items au sol
-        items_map = []
-        items_verifications = []
-        counter = 0
+        item_already = False
 
         #charger les images des blocs
         mur_img = pygame.transform.scale(pygame.image.load("images/map/mur.png"), (tile_size, tile_size))
-        coin_img = pygame.transform.scale(pygame.image.load("images/map/coin.png"), (tile_size, tile_size))       
+        coin_img = pygame.transform.scale(pygame.image.load("images/map/coin.png"), (tile_size, tile_size))
 
-        #pour modifier les valeurs
-        self.exits, self.items_map = exits, items_map
+        #pour modifier les valeurs, les sorties, les itemms
+        self.exits, self.items_map, items_verifications, self.signs = [], [], [], []
+
+        #pour les portes de sorties
         exit_dir = 'left'
         x_ = 0
         y_ = 0
@@ -52,7 +50,7 @@ class Map:
                     self.tile_list.append(tile)
                 #si elle commence par x, X, y ou Y, alors c'est une porte vers une autre salle
                 elif str(tile)[0] == "E":
-                    x_, y_ = 0, 0
+                    x_, y_, link = 0, 0, 0
                     if row_count == 0 or row_count == 17:
                         if col_count == 15:
                             exit_dir = "left"
@@ -63,10 +61,8 @@ class Map:
                     elif col_count == 0 or col_count == 31:
                         if row_count == 8:
                             exit_dir = "top"
-                            link = 3
                         elif row_count == 9:
                             exit_dir = "bottom"
-                            link = 4
                     if col_count == 0:
                         x_ = tile_size - 4
                     if row_count == 0:
@@ -91,17 +87,23 @@ class Map:
                     for index in range(len(items_verifications)):
                         if [item.rect.x, item.rect.y, item.room] == items_verifications[index]:
                             #ajoute 1 au compteur si l'item à déja été pris
-                            counter += 1
+                            item_already = True
                     #et s'il n'a pas été ramassé, alors on l'ajoute à la liste des objets au sol à dessiner, et à considérer ses collisions
-                    if counter == 0:
+                    if item_already == False:
                         self.items_map.append(item)
-                    counter = 0
+                    item_already = False
+                elif str(tile)[0] == "S":
+                    img = pygame.transform.scale(pygame.image.load(f"images/signs/sign{str(tile)[1]}.png"), (1000, 500))       
+                    img_rect = img.get_rect()
+                    img_rect.x, img_rect.y = col_count * tile_size, row_count * tile_size
+                    sign = Sign(img, img_rect.x, img_rect.y)
+                    self.signs.append(sign)
                 col_count += 1
             row_count += 1
     
     def replace(self):
         """une méthode pour pouvoir remplacer les variables"""
-        return self.exits, self.items_map
+        return self.exits, self.items_map, self.signs
     
     def draw(self, screen):
         """méthode pour dessiner cette liste qui contient toutes les coordonnées et les images des blocs à placer"""
@@ -222,3 +224,21 @@ class Item:
     def draw(self, screen):
         """dessiner l'item"""
         screen.blit(self.image, self.rect)
+    
+class Sign:
+    def __init__(self, img2, x, y):
+        self.image = pygame.transform.scale(pygame.image.load("images/signs/sign.png"), (40, 40))    
+        self.rect = self.image.get_rect()   
+        self.rect.x = x
+        self.rect.y = y
+        self.image2 = img2
+        self.rect2 = self.image2.get_rect()
+        self.rect2.x = 140
+        self.rect2.y = 110
+        self.draw = False
+
+    def draw_item(self, screen):
+        screen.blit(self.image, self.rect)
+
+    def draw_(self, screen):
+        screen.blit(self.image2, self.rect2)
