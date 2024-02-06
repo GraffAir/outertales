@@ -8,20 +8,20 @@ class Player:
         self.images_walk_right, self.images_walk_left, self.images_walk_up, self.images_walk_down = [], [], [], []
 
         #pour chaque liste, on a une série d'images, et on va faire en sorte que l'image du joueur varie d'une image à l'autre pour simuler un GIF
-        for number in range(1, 5):
-            img_right = pygame.transform.scale(pygame.image.load(f"images/player/player{number}.png"), (40, 40))
+        for number in range(1, 4):
+            img_right = pygame.transform.scale(pygame.image.load(f"images/player/droite{number}.png"), (40, 40))
             self.images_walk_right.append(img_right)
-            img_left = pygame.transform.flip(img_right, True, False)
+            img_left = pygame.transform.scale(pygame.image.load(f"images/player/left{number}.png"), (40, 40))
             self.images_walk_left.append(img_left)
-            img_up = pygame.transform.rotate(img_right, 90)
+            img_up = pygame.transform.scale(pygame.image.load(f"images/player/up{number}.png"), (40, 40))
             self.images_walk_up.append(img_up)
-            img_down = pygame.transform.flip(img_up, False, True)
+            img_down = pygame.transform.scale(pygame.image.load(f"images/player/bas{number}.png"), (40, 40))
             self.images_walk_down.append(img_down)
         #on définir l'image de départ
         self.image = self.images_walk_right[0]
 
         #intervalle de temps entre le changement d'images
-        self.animation_cooldown = 5
+        self.animation_cooldown = 6
         #un compteur qui va augmenter pour parvenir au cooldown et revenir à 0, et ainsi créer une boucle temporelle
         self.counter = 0
         #l'indice de l'image à afficher
@@ -123,22 +123,6 @@ class Player:
             self.items_map.remove(item)
         
     def collisions_signs(self, sign):
-
-        # dx_test, dy_test = self.dx, self.dy
-        # if sign.rect.colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()) == False:
-        #     if sign.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
-        #         if sign.rect.x != self.rect.x + 40 and sign.rect.y != self.rect.y - 40:
-        #             dy_test = 0
-        # else:
-        #     dx_test = 0
-        # if sign.rect.colliderect(self.rect.x, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()) == False:
-        #     if sign.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
-        #         if sign.rect.x != self.rect.x - 40 and sign.rect.y != self.rect.y + 40:
-        #             dx_test = 0
-        # else:
-        #     dy_test = 0
-        # self.dx, self.dy = dx_test, dy_test
-
         if sign.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
             if self.sign_counter >= 50:
                 if pygame.key.get_pressed()[pygame.K_e]:
@@ -149,6 +133,31 @@ class Player:
                     self.sign_counter = 0
         self.sign_counter += 1
 
+    def collisions_chests(self, chest):
+
+        if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+            if pygame.key.get_pressed()[pygame.K_e]:
+                if chest.open == False:
+                    chest.open = True
+                    self.items_map.append(chest.contenu)
+                    self.chests.remove(chest)
+                    self.chests_a.append(chest)
+
+        dx_test, dy_test = self.dx, self.dy
+        if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()) == False:
+            if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+                if chest.rect.x != self.rect.x + 40 and chest.rect.y != self.rect.y - 40:
+                    dy_test = 0
+        else:
+            dx_test = 0
+        if chest.rect.colliderect(self.rect.x, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()) == False:
+            if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+                if chest.rect.x != self.rect.x - 40 and chest.rect.y != self.rect.y + 40:
+                    dx_test = 0
+        else:
+            dy_test = 0
+        self.dx, self.dy = dx_test, dy_test
+
     def use_items(self):
         "une fois un item dans l'inventaire, on peut l'utiliser (une clé par exemple augmente le niveau de pass pour les sorties)"
         keys = []
@@ -158,10 +167,10 @@ class Player:
                 keys.append(int(item.value[3]))
                 self.room_badge = max(keys)
 
-    def update(self, screen, room_draw, items, items_map, exits, signs, room_badge, room_x, room_y):
+    def update(self, screen, room_draw, items, items_map, exits, signs, chests, chests_a, room_badge, room_x, room_y):
         """gérer tous les évènements"""
         #on crée un objet avec self pour pouvoir changer les variables avec la méthode replace
-        self.exits, self.items_map, self.items, self.signs, self.room_badge, self.room_x, self.room_y = exits, items_map, items, signs, room_badge, room_x, room_y
+        self.exits, self.items_map, self.items, self.signs, self.chests, self.chests_a, self.room_badge, self.room_x, self.room_y = exits, items_map, items, signs, chests, chests_a, room_badge, room_x, room_y
 
         #les variables qui symbolise le déplacement qui sera réalisé si possible
         self.dx, self.dy = 0, 0
@@ -202,6 +211,9 @@ class Player:
 
         for sign in signs:
             self.collisions_signs(sign)
+
+        for chest in chests:
+            self.collisions_chests(chest)
         
         #on utilise les items
         self.use_items()
@@ -226,4 +238,4 @@ class Player:
 
     def replace(self):
         """on change les variables qui ont été modifiés"""
-        return self.exits, self.items_map, self.items, self.room_badge, self.room_x, self.room_y
+        return self.exits, self.items_map, self.items, self.chests, self.chests_a, self.room_badge, self.room_x, self.room_y
