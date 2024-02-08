@@ -92,14 +92,24 @@ class Player:
         self.dx, self.dy = dx_test, dy_test
 
 
-    def collisions_exits(self, exit):
+    def collisions_exits(self, exit, electricity):
         """gérer les collisions avec les sorties salles pour changer la salle affichée"""
-        if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
-            #on vérifie si le joueur à le niveau de pass requis
-            if self.room_badge >= int(exit.value) and pygame.key.get_pressed()[pygame.K_e]:
-                #en fonction de ou mène la porte, on attribue des coordonnées au joueur qui sont différentes
-                exit.open = True
-                #si le joueur n'a pas un niveau de pass requis, alors pas de déplacement
+        if electricity:
+            if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+                #on vérifie si le joueur à le niveau de pass requis
+                if self.room_badge >= int(exit.value) and pygame.key.get_pressed()[pygame.K_e]:
+                    #en fonction de ou mène la porte, on attribue des coordonnées au joueur qui sont différentes
+                    exit.open = True
+                    #si le joueur n'a pas un niveau de pass requis, alors pas de déplacement
+        else:
+            for item in self.items:
+                if item.value == "hammer":
+                    if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+                        if exit.breakable:
+                            if pygame.key.get_pressed()[pygame.K_e]:
+                                exit.open = True
+                                (exit.rect.x, exit.rect.y) = exit.end_pos
+
         dx_test, dy_test = self.dx, self.dy
         if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()) == False:
             if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
@@ -123,7 +133,7 @@ class Player:
             self.items_map.remove(item)
         
     def collisions_signs(self, sign):
-        if sign.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+        if sign.rect_item.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
             if self.sign_counter >= 50:
                 if pygame.key.get_pressed()[pygame.K_e]:
                     if sign.draw == False:
@@ -139,9 +149,10 @@ class Player:
             if pygame.key.get_pressed()[pygame.K_e]:
                 if chest.open == False:
                     chest.open = True
-                    self.items_map.append(chest.contenu)
                     self.chests.remove(chest)
                     self.chests_a.append(chest)
+                    if chest.contenu != "":
+                        self.items_map.append(chest.contenu)
 
         dx_test, dy_test = self.dx, self.dy
         if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()) == False:
@@ -167,7 +178,7 @@ class Player:
                 keys.append(int(item.value[3]))
                 self.room_badge = max(keys)
 
-    def update(self, screen, room_draw, items, items_map, exits, signs, chests, chests_a, room_badge, room_x, room_y):
+    def update(self, screen, room_draw, items, items_map, exits, signs, chests, chests_a, room_badge, room_x, room_y, electricity):
         """gérer tous les évènements"""
         #on crée un objet avec self pour pouvoir changer les variables avec la méthode replace
         self.exits, self.items_map, self.items, self.signs, self.chests, self.chests_a, self.room_badge, self.room_x, self.room_y = exits, items_map, items, signs, chests, chests_a, room_badge, room_x, room_y
@@ -203,7 +214,7 @@ class Player:
         
         #gérer les collisions avec les portes de sorties
         for exit in self.exits:
-            self.collisions_exits(exit)
+            self.collisions_exits(exit, electricity)
 
         #et le collisions avec les items au sol
         for item in self.items_map:
