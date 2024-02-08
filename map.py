@@ -2,23 +2,22 @@ import pygame
 
 class Map:
     """classe pour pouvoir dessiner la salle"""
-    def __init__(self, liste, items, room_num, tile_size):
+    def __init__(self, liste, items, chests, room_num, tile_size):
         """créer une liste contient les images et les coordonnées à dessiner"""
         self.tile_list = []
-        #pour les portes de sorties
-        exits = []
 
         #pour les items au sol
-        items_map = []
-        items_verifications = []
-        counter = 0
+        item_already = False
+        chest_already = False
 
         #charger les images des blocs
         mur_img = pygame.transform.scale(pygame.image.load("images/map/mur.png"), (tile_size, tile_size))
-        coin_img = pygame.transform.scale(pygame.image.load("images/map/coin.png"), (tile_size, tile_size))       
+        coin_img = pygame.transform.scale(pygame.image.load("images/map/coin.png"), (tile_size, tile_size))
 
-        #pour modifier les valeurs
-        self.exits, self.items_map = exits, items_map
+        #pour modifier les valeurs, les sorties, les itemms
+        self.exits, self.items_map, items_verifications, chests_ver, self.signs, self.chests = [], [], [], [], [], []
+
+        #pour les portes de sorties
         exit_dir = 'left'
         x_ = 0
         y_ = 0
@@ -52,7 +51,7 @@ class Map:
                     self.tile_list.append(tile)
                 #si elle commence par x, X, y ou Y, alors c'est une porte vers une autre salle
                 elif str(tile)[0] == "E":
-                    x_, y_ = 0, 0
+                    x_, y_, link = 0, 0, 0
                     if row_count == 0 or row_count == 17:
                         if col_count == 15:
                             exit_dir = "left"
@@ -63,10 +62,8 @@ class Map:
                     elif col_count == 0 or col_count == 31:
                         if row_count == 8:
                             exit_dir = "top"
-                            link = 3
                         elif row_count == 9:
                             exit_dir = "bottom"
-                            link = 4
                     if col_count == 0:
                         x_ = tile_size - 4
                     if row_count == 0:
@@ -91,17 +88,40 @@ class Map:
                     for index in range(len(items_verifications)):
                         if [item.rect.x, item.rect.y, item.room] == items_verifications[index]:
                             #ajoute 1 au compteur si l'item à déja été pris
-                            counter += 1
+                            item_already = True
                     #et s'il n'a pas été ramassé, alors on l'ajoute à la liste des objets au sol à dessiner, et à considérer ses collisions
-                    if counter == 0:
+                    if item_already == False:
                         self.items_map.append(item)
-                    counter = 0
+                    item_already = False
+                elif str(tile)[0] == "S":
+                    img = pygame.transform.scale(pygame.image.load(f"images/signs/sign{str(tile)[1]}.png"), (1000, 500))       
+                    img_rect = img.get_rect()
+                    img_rect.x, img_rect.y = col_count * tile_size, row_count * tile_size
+                    sign = Sign(img, img_rect.x, img_rect.y)
+                    self.signs.append(sign)
+                elif isinstance(tile, tuple):
+                    if tile [0] == "C":
+                        chest = Chest(col_count * tile_size, row_count * tile_size, tile[1], tile[2], room_num)
+                        #créer une liste contenants les coordonnées et la salle de chaque objet DEJA RAMASSE
+                        for ch in chests:
+                            #ajouter les items ramassé qui ne sont pas dans la liste 
+                            if [ch.rect.x, ch.rect.y, ch.room] not in chests_ver:
+                                chests_ver.append([ch.rect.x, ch.rect.y, ch.room])
+                        #pour chaque item sur le sol, il vérifie s'il en existe deja un semblable dans l'inventaire (avec les coordonnées et le numéro de salle : il ne peut y en avoir qu'un qui y correspond, à savoir le même, qui serait deja ramassé)
+                        for index in range(len(chests_ver)):
+                            if [chest.rect.x, chest.rect.y, chest.room] == chests_ver[index]:
+                                #ajoute 1 au compteur si l'item à déja été pris
+                                chest_already = True
+                        #et s'il n'a pas été ramassé, alors on l'ajoute à la liste des objets au sol à dessiner, et à considérer ses collisions
+                        if chest_already == False:
+                            self.chests.append(chest)
+                        chest_already = False
                 col_count += 1
             row_count += 1
     
     def replace(self):
         """une méthode pour pouvoir remplacer les variables"""
-        return self.exits, self.items_map
+        return self.exits, self.items_map, self.signs, self.chests
     
     def draw(self, screen):
         """méthode pour dessiner cette liste qui contient toutes les coordonnées et les images des blocs à placer"""
@@ -114,9 +134,9 @@ class Exit:
         img = pygame.image.load("images/exit.png")
         #en fonction de si la porte est à droite et à gauche ou en haut et en bas, la porte est un rectangle plus long en longueur ou en hauteur
         if dir in ["top", "bottom"]: #On répère l'image à dessiner en fonction du point cardinal O, E, S, N
-            self.image = pygame.transform.scale(img, (4, 40))
+            self.image = pygame.transform.scale(img, (7, 40))
         elif dir in ["left", "right"]:
-            self.image = pygame.transform.scale(img, (40, 4))
+            self.image = pygame.transform.scale(img, (40, 7))
         #les coordonnées
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = x, y
@@ -222,3 +242,37 @@ class Item:
     def draw(self, screen):
         """dessiner l'item"""
         screen.blit(self.image, self.rect)
+    
+class Sign:
+    def __init__(self, img2, x, y):
+        self.image = pygame.transform.scale(pygame.image.load("images/signs/sign.png"), (40, 40))    
+        self.rect = self.image.get_rect()   
+        self.rect.x = x
+        self.rect.y = y
+        self.image2 = img2
+        self.rect2 = self.image2.get_rect()
+        self.rect2.x = 140
+        self.rect2.y = 110
+        self.draw = False
+
+    def draw_item(self, screen):
+        screen.blit(self.image, self.rect)
+
+    def draw_(self, screen):
+        screen.blit(self.image2, self.rect2)
+
+class Chest:
+    def __init__(self, x, y, chest, contenu, room_num):
+        self.image = pygame.transform.scale(pygame.image.load(f"images/{chest}.png"), (40, 40))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.contenu = Item(x, y, contenu, room_num)
+        self.open = False
+        self.room = room_num
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+    
+    def draw_item(self, screen):
+        screen.blit(self.contenu.image, self.contenu.rect)
