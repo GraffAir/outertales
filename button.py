@@ -1,6 +1,5 @@
 import pygame
 
-
 class Button:
     def __init__(self, x, y, img):
         self.image = pygame.transform.scale(img, (40 * 6, 40 * 2))
