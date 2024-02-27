@@ -91,12 +91,14 @@ class Map:
                     if item_already == False:
                         self.items_map.append(item)
                     item_already = False
+                #les panneaux
                 elif str(tile)[0] == "S":
                     sign_ = tile
                     x, y = col_count * tile_size, row_count * tile_size
                     sign = Sign(sign_, x, y)
                     self.signs.append(sign)
                 elif isinstance(tile, tuple):
+                    #les coffres
                     if tile [0] == "C":
                         chest = Chest(col_count * tile_size, row_count * tile_size, tile[1], tile[2], room_num)
                         #créer une liste contenants les coordonnées et la salle de chaque objet DEJA RAMASSE
@@ -129,7 +131,10 @@ class Exit:
     """classe pour gérer les changements de salle"""
     def __init__(self, x, y, dir, val, link, breakable):
         """definir l'image de la porte, sa position, et ses variables"""
-        img = pygame.image.load("images/exit.png")
+        if breakable == "B":
+            img = pygame.image.load("images/glass_door.png")
+        elif breakable == "U":
+            img = pygame.image.load("images/iron_door.png")
         #en fonction de si la porte est à droite et à gauche ou en haut et en bas, la porte est un rectangle plus long en longueur ou en hauteur
         if dir == 'bottom': #On répère l'image à dessiner en fonction du point cardinal O, E, S, N
             self.image = img
@@ -223,7 +228,11 @@ class Exit:
             #si la porte est réfermé, remettre à 0 les variables
             if self.start_pos == (self.rect.x, self.rect.y):
                 self.reset()
-    
+        
+        else:
+            if self.open:
+                self.image = pygame.image.load("images/glass_door_break.png")
+
         self.draw(screen)
 
     def draw(self, screen):
@@ -280,7 +289,7 @@ class Chest:
     def __init__(self, x, y, chest, contenu, room_num):
         """définir quel coffre, son contenu, sa position..."""
         self.image_chest = pygame.transform.scale(pygame.image.load(f"images/{chest}.png"), (40, 40))
-        self.image_chest_open = pygame.transform.scale(pygame.image.load("images/open_chest.png"), (40, 40))
+        self.image_chest_open = pygame.transform.scale(pygame.image.load(f"images/{chest}_open.png"), (40, 40))
         self.rect = self.image_chest.get_rect()
         self.rect.x, self.rect.y = x, y
         if contenu != "":
@@ -289,6 +298,8 @@ class Chest:
             self.contenu = contenu
         self.open = False
         self.room = room_num
+        self.item_took = False
+        self.item_cooldown = 0
 
     def draw(self, screen):
         """dessiner le coffre"""
@@ -304,5 +315,7 @@ class Chest:
             self.image_chest = self.image_chest_open
             if self.room == room_num:
                 self.draw(screen)
+            if pygame.key.get_pressed()[pygame.K_e] == False:
+                self.item_cooldown = True
         else:
             self.draw(screen)

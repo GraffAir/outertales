@@ -34,11 +34,10 @@ game, menu, sign  = False, True, False
 #compteur pour les panneaux        
 sign_counter = 0
 electricity = False
-
 #charger les images
 
 #celle du sol
-bg_img = pygame.transform.scale(pygame.image.load("images/map/floor.png"), (1280, 720))
+bg_img = pygame.image.load("images/map/floor.jpg")
 
 def draw_badge_level(x, y, num):
    """fonction pour afficher le niveau de badge que possède le joueur"""

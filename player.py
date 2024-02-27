@@ -133,6 +133,7 @@ class Player:
             self.items_map.remove(item)
         
     def collisions_signs(self, sign):
+        """les collisisons avec les panneaux"""
         if sign.rect_item.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
             if self.sign_counter >= 50:
                 if pygame.key.get_pressed()[pygame.K_e]:
@@ -144,7 +145,7 @@ class Player:
         self.sign_counter += 1
 
     def collisions_chests(self, chest):
-
+        '''les collisions avec les coffres'''
         if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
             if pygame.key.get_pressed()[pygame.K_e]:
                 if chest.open == False:
@@ -153,6 +154,13 @@ class Player:
                     self.chests_a.append(chest)
                     if chest.contenu != "":
                         self.items_map.append(chest.contenu)
+                elif chest.open:
+                    if chest.item_took == False:
+                        if chest.contenu != "":
+                            if chest.item_cooldown == True:
+                                self.items.append(chest.contenu)
+                                self.items_map.remove(chest.contenu)
+                                chest.item_took = True
 
         dx_test, dy_test = self.dx, self.dy
         if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()) == False:
@@ -172,12 +180,25 @@ class Player:
     def use_items(self):
         "une fois un item dans l'inventaire, on peut l'utiliser (une clé par exemple augmente le niveau de pass pour les sorties)"
         keys = []
-
         for item in self.items:
             if item.value[0:3] == "key":
                 keys.append(int(item.value[3]))
                 self.room_badge = max(keys)
 
+    def change_room(self):
+        '''changer la room si le joueur sort des limites'''
+        if self.rect.x > 1240:
+            self.room_x += 1
+            self.rect.x = 40
+        elif self.rect.x < 0:
+            self.room_x -= 1
+            self.rect.x = 1280 - 40 * 2
+        elif self.rect.y > 680:
+            self.room_y += 1
+            self.rect.y = 40
+        elif self.rect.y < 0:
+            self.room_y -= 1
+            self.rect.y = 720 - 40 * 2
     def update(self, screen, room_draw, items, items_map, exits, signs, chests, chests_a, room_badge, room_x, room_y, electricity):
         """gérer tous les évènements"""
         #on crée un objet avec self pour pouvoir changer les variables avec la méthode replace
@@ -226,21 +247,13 @@ class Player:
         for chest in chests:
             self.collisions_chests(chest)
         
+        for chest in chests_a:
+            self.collisions_chests(chest)
+        
         #on utilise les items
         self.use_items()
 
-        if self.rect.x > 1240:
-            self.room_x += 1
-            self.rect.x = 40
-        elif self.rect.x < 0:
-            self.room_x -= 1
-            self.rect.x = 1280 - 40 * 2
-        elif self.rect.y > 680:
-            self.room_y += 1
-            self.rect.y = 40
-        elif self.rect.y < 0:
-            self.room_y -= 1
-            self.rect.y = 720 - 40 * 2
+        self.change_room()
 
         #déplacer le joueur et le dessiner
         self.rect.x += self.dx
