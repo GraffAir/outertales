@@ -12,6 +12,7 @@ class Map:
         #charger les images des blocs
         mur_img = pygame.transform.scale(pygame.image.load("images/map/mur.png"), (tile_size, tile_size))
         coin_img = pygame.transform.scale(pygame.image.load("images/map/coin.png"), (tile_size, tile_size))
+        glass_img = pygame.transform.scale(pygame.image.load("images/map/glass_wall.png"), (tile_size, tile_size))
 
         #pour modifier les valeurs, les sorties, les itemms
         self.exits, self.items_map, items_verifications, chests_ver, self.signs, self.chests = [], [], [], [], [], []
@@ -43,6 +44,12 @@ class Map:
                         img = mur_img
                     elif (0 < row_count < 17) and col_count == 31:
                         img = pygame.transform.rotate(mur_img, 90)
+                    img_rect = img.get_rect()
+                    img_rect.x, img_rect.y = col_count * tile_size, row_count * tile_size
+                    tile = (img, img_rect)
+                    self.tile_list.append(tile)
+                elif tile == 2:
+                    img = glass_img
                     img_rect = img.get_rect()
                     img_rect.x, img_rect.y = col_count * tile_size, row_count * tile_size
                     tile = (img, img_rect)

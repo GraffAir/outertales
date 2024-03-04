@@ -9,13 +9,13 @@ class Player:
 
         #pour chaque liste, on a une série d'images, et on va faire en sorte que l'image du joueur varie d'une image à l'autre pour simuler un GIF
         for number in range(1, 4):
-            img_right = pygame.transform.scale(pygame.image.load(f"images/player/droite{number}.png"), (40, 40))
+            img_right = pygame.transform.scale(pygame.image.load(f"images/player/right{number}.png"), (40, 40))
             self.images_walk_right.append(img_right)
             img_left = pygame.transform.scale(pygame.image.load(f"images/player/left{number}.png"), (40, 40))
             self.images_walk_left.append(img_left)
             img_up = pygame.transform.scale(pygame.image.load(f"images/player/up{number}.png"), (40, 40))
             self.images_walk_up.append(img_up)
-            img_down = pygame.transform.scale(pygame.image.load(f"images/player/bas{number}.png"), (40, 40))
+            img_down = pygame.transform.scale(pygame.image.load(f"images/player/down{number}.png"), (40, 40))
             self.images_walk_down.append(img_down)
         #on définir l'image de départ
         self.image = self.images_walk_right[0]
@@ -86,11 +86,11 @@ class Player:
         if tile[1].colliderect(self.rect.x, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()) == False:
             if tile[1].colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
                 if tile[1][0] != self.rect.x - 40 and tile[1][1] != self.rect.y + 40:
+                    print('OK')
                     dx_test = 0
         else:
             dy_test = 0
         self.dx, self.dy = dx_test, dy_test
-
 
     def collisions_exits(self, exit, electricity):
         """gérer les collisions avec les sorties salles pour changer la salle affichée"""
@@ -155,26 +155,28 @@ class Player:
                     if chest.contenu != "":
                         self.items_map.append(chest.contenu)
                 elif chest.open:
-                    if chest.item_took == False:
-                        if chest.contenu != "":
-                            if chest.item_cooldown == True:
-                                self.items.append(chest.contenu)
-                                self.items_map.remove(chest.contenu)
-                                chest.item_took = True
+                    if chest.room == self.room_num:
+                        if chest.item_took == False:
+                            if chest.contenu != "":
+                                if chest.item_cooldown == True:
+                                    self.items.append(chest.contenu)
+                                    self.items_map.remove(chest.contenu)
+                                    chest.item_took = True
 
         dx_test, dy_test = self.dx, self.dy
-        if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()) == False:
-            if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
-                if chest.rect.x != self.rect.x + 40 and chest.rect.y != self.rect.y - 40:
-                    dy_test = 0
-        else:
-            dx_test = 0
-        if chest.rect.colliderect(self.rect.x, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()) == False:
-            if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
-                if chest.rect.x != self.rect.x - 40 and chest.rect.y != self.rect.y + 40:
-                    dx_test = 0
-        else:
-            dy_test = 0
+        if chest.room == self.room_num:
+            if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()) == False:
+                if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+                    if chest.rect.x != self.rect.x + 40 and chest.rect.y != self.rect.y - 40:
+                        dy_test = 0
+            else:
+                dx_test = 0
+            if chest.rect.colliderect(self.rect.x, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()) == False:
+                if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+                    if chest.rect.x != self.rect.x - 40 and chest.rect.y != self.rect.y + 40:
+                        dx_test = 0
+            else:
+                dy_test = 0
         self.dx, self.dy = dx_test, dy_test
 
     def use_items(self):
@@ -199,10 +201,11 @@ class Player:
         elif self.rect.y < 0:
             self.room_y -= 1
             self.rect.y = 720 - 40 * 2
-    def update(self, screen, room_draw, items, items_map, exits, signs, chests, chests_a, room_badge, room_x, room_y, electricity):
+
+    def update(self, screen, room_draw, items, items_map, exits, signs, chests, chests_a, room_badge, room_num, room_x, room_y, electricity):
         """gérer tous les évènements"""
         #on crée un objet avec self pour pouvoir changer les variables avec la méthode replace
-        self.exits, self.items_map, self.items, self.signs, self.chests, self.chests_a, self.room_badge, self.room_x, self.room_y = exits, items_map, items, signs, chests, chests_a, room_badge, room_x, room_y
+        self.exits, self.items_map, self.items, self.signs, self.chests, self.chests_a, self.room_badge, self.room_num, self.room_x, self.room_y = exits, items_map, items, signs, chests, chests_a, room_badge, room_num, room_x, room_y
 
         #les variables qui symbolise le déplacement qui sera réalisé si possible
         self.dx, self.dy = 0, 0

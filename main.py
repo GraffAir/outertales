@@ -14,7 +14,7 @@ clock = pygame.time.Clock()
 fps = 60
 
 #configurer la fenêtre et la taille des cases
-screen = pygame.display.set_mode((1280, 720))
+screen = pygame.display.set_mode((1280, 720))   
 pygame.display.set_caption("Outer Tales")
 tile_size = 40
 
@@ -23,7 +23,7 @@ tile_size = 40
 #pour se réperer dans la liste des salles
 room_x, room_y = 0, 0
 #les portes de sorties à considérer en collisions, les items au sol et ceux de l'inventaire, les coffres ouverts et fermés.
-exits, items_map, items, signs, chests, chests_open = [], [], [], [], [],[]
+exits, items_map, items, signs, chests, chests_open = [], [], [], [], [], []
 #le niveau de pass pour passer les portes
 room_badge = 0
 #la salle actuelle et son numéro d'identification
@@ -41,19 +41,17 @@ bg_img = pygame.image.load("images/map/floor.jpg")
 
 def draw_badge_level(x, y, num):
    """fonction pour afficher le niveau de badge que possède le joueur"""
-   screen.blit(pygame.image.load(f"images/print_pass{num}.png"), (x, y))
+   screen.blit(pygame.transform.scale(pygame.image.load(f"images/level{num}.png"), (150, 90)), (x, y))
 
 def import_room(num):
     """fonction pour charger les salles"""
-    # if path.exists(f"rooms/room{num}.bin"):
-    #     pickle_in = open(f"rooms/room{num}.bin", "rb")
-    #     return pickle.load(pickle_in)
     return rooms.rooms[f"{num}"]
 
 #on importe les salles
 Rooms = [
-    [import_room(1), import_room(2)],
-    [import_room(3), import_room(4)]
+    [import_room("storage"), import_room("cafeteria"), import_room("breakroom"), import_room("dormitory")],
+    [[], import_room("kitchen"), import_room("garden"), import_room("greenhouse")],
+    [[], [], import_room("generator_room"), []]
 ]
 
 #on définit la salle de base et on la dessine
@@ -95,6 +93,8 @@ while run:
             #la dessiner maintenant
             room_draw = map.Map(room, items, chests_open, room_num, tile_size)
             exits, items_map, signs, chests = room_draw.replace()
+            if room_num == 11:
+                electricity = True
             #faire en sorte que les portes soit ouvertes à l'entrée dans la salle
             for exit in exits:
                 if player.rect.colliderect(exit.rect.x - 100, exit.rect.y - 100, 200, 200):
@@ -140,7 +140,7 @@ while run:
             sign, game = sign.update(screen, sign, game)
 
         #mettre à jour le joueur    
-        player.update(screen, room_draw, items, items_map, exits, signs, chests, chests_open, room_badge, room_x, room_y, electricity)
+        player.update(screen, room_draw, items, items_map, exits, signs, chests, chests_open, room_badge, room_num, room_x, room_y, electricity)
         exits, items_map, items, chests, chests_open, room_badge, room_x, room_y  = player.replace()
 
         #afficher le niveau de badge
