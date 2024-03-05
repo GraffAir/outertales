@@ -86,29 +86,34 @@ class Player:
         if tile[1].colliderect(self.rect.x, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()) == False:
             if tile[1].colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
                 if tile[1][0] != self.rect.x - 40 and tile[1][1] != self.rect.y + 40:
-                    print('OK')
                     dx_test = 0
         else:
             dy_test = 0
         self.dx, self.dy = dx_test, dy_test
 
-    def collisions_exits(self, exit, electricity):
+    def collisions_exits(self, exit, electricity, screen):
         """gérer les collisions avec les sorties salles pour changer la salle affichée"""
+        #s'il y a de l'electricité
         if electricity:
-            if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+            if exit.rect.colliderect(self.rect.x + self.dx - 5, self.rect.y + self.dy - 5, self.image.get_width() + 10, self.image.get_height() + 10):
                 #on vérifie si le joueur à le niveau de pass requis
+                if exit.breakable == False and exit.open == False:
+                    screen.blit(pygame.transform.scale(pygame.image.load("images/tell.png"), (300, 40)), (940, 40))
                 if self.room_badge >= int(exit.value) and pygame.key.get_pressed()[pygame.K_e]:
                     #en fonction de ou mène la porte, on attribue des coordonnées au joueur qui sont différentes
                     exit.open = True
                     #si le joueur n'a pas un niveau de pass requis, alors pas de déplacement
+                if exit.breakable == True:
+                    exit.open = True
         else:
             for item in self.items:
                 if item.value == "hammer":
-                    if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
-                        if exit.breakable:
+                    if exit.rect.colliderect(self.rect.x + self.dx - 5, self.rect.y + self.dy - 5, self.image.get_width() + 10, self.image.get_height() + 10):
+                        if exit.breakable and exit.open == False:
+                            screen.blit(pygame.transform.scale(pygame.image.load("images/tell.png"), (300, 40)), (940, 40))
                             if pygame.key.get_pressed()[pygame.K_e]:
                                 exit.open = True
-                                (exit.rect.x, exit.rect.y) = exit.end_pos
+                                exit.rect.x, exit.rect.y = exit.end_pos
 
         dx_test, dy_test = self.dx, self.dy
         if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()) == False:
@@ -146,15 +151,16 @@ class Player:
 
     def collisions_chests(self, chest):
         '''les collisions avec les coffres'''
-        if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+        if chest.rect.colliderect(self.rect.x + self.dx - 5, self.rect.y + self.dy - 5, self.image.get_width() + 10, self.image.get_height() + 10):
             if pygame.key.get_pressed()[pygame.K_e]:
                 if chest.open == False:
                     chest.open = True
                     self.chests.remove(chest)
-                    self.chests_a.append(chest)
+                    self.chests_open.append(chest)
                     if chest.contenu != "":
                         self.items_map.append(chest.contenu)
                 elif chest.open:
+                    #si on ouvre le coffre, ajouter l'item dans l'inventaire
                     if chest.room == self.room_num:
                         if chest.item_took == False:
                             if chest.contenu != "":
@@ -202,10 +208,10 @@ class Player:
             self.room_y -= 1
             self.rect.y = 720 - 40 * 2
 
-    def update(self, screen, room_draw, items, items_map, exits, signs, chests, chests_a, room_badge, room_num, room_x, room_y, electricity):
+    def update(self, screen, room_draw, items, items_map, exits, signs, chests, chests_open, room_badge, room_num, room_x, room_y, electricity):
         """gérer tous les évènements"""
         #on crée un objet avec self pour pouvoir changer les variables avec la méthode replace
-        self.exits, self.items_map, self.items, self.signs, self.chests, self.chests_a, self.room_badge, self.room_num, self.room_x, self.room_y = exits, items_map, items, signs, chests, chests_a, room_badge, room_num, room_x, room_y
+        self.exits, self.items_map, self.items, self.signs, self.chests, self.chests_open, self.room_badge, self.room_num, self.room_x, self.room_y = exits, items_map, items, signs, chests, chests_open, room_badge, room_num, room_x, room_y
 
         #les variables qui symbolise le déplacement qui sera réalisé si possible
         self.dx, self.dy = 0, 0
@@ -238,24 +244,31 @@ class Player:
         
         #gérer les collisions avec les portes de sorties
         for exit in self.exits:
-            self.collisions_exits(exit, electricity)
+            self.collisions_exits(exit, electricity, screen)
+            for exit_ in self.exits:
+                if electricity == False:
+                    if exit.link == exit_.link:
+                        if (exit.rect.x, exit.rect.y) == exit.end_pos:
+                            exit_.rect.x, exit_.rect.y = exit_.end_pos
 
         #et le collisions avec les items au sol
         for item in self.items_map:
             self.collisions_items(item)
 
+        #les collisions avec les panneaux, les coffres ouverts et fermés
         for sign in signs:
             self.collisions_signs(sign)
 
         for chest in chests:
             self.collisions_chests(chest)
         
-        for chest in chests_a:
+        for chest in chests_open:
             self.collisions_chests(chest)
         
         #on utilise les items
         self.use_items()
 
+        #on fait changer le joueur de room si besoin
         self.change_room()
 
         #déplacer le joueur et le dessiner
@@ -265,4 +278,4 @@ class Player:
 
     def replace(self):
         """on change les variables qui ont été modifiés"""
-        return self.exits, self.items_map, self.items, self.chests, self.chests_a, self.room_badge, self.room_x, self.room_y
+        return self.exits, self.items_map, self.items, self.chests, self.chests_open, self.room_badge, self.room_x, self.room_y

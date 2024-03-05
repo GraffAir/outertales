@@ -34,14 +34,18 @@ game, menu, sign  = False, True, False
 #compteur pour les panneaux        
 sign_counter = 0
 electricity = False
+
 #charger les images
 
 #celle du sol
 bg_img = pygame.image.load("images/map/floor.jpg")
+#celles du menu
+play_btn_img = pygame.image.load("images/menu/play_btn.jpg")
+menu_bg_img = pygame.transform.scale(pygame.image.load("images/menu/menu_bg.png"), (1280, 720))
 
 def draw_badge_level(x, y, num):
    """fonction pour afficher le niveau de badge que possède le joueur"""
-   screen.blit(pygame.transform.scale(pygame.image.load(f"images/level{num}.png"), (150, 90)), (x, y))
+   screen.blit(pygame.transform.scale(pygame.image.load(f"images/level{num}.png"), (220, 140)), (x, y))
 
 def import_room(num):
     """fonction pour charger les salles"""
@@ -56,14 +60,14 @@ Rooms = [
 
 #on définit la salle de base et on la dessine
 room = Rooms[room_y][room_x]
-room_draw = map.Map(room, items, chests_open, room_num, tile_size)
+room_draw = map.Map(room, items, chests_open, room_num, tile_size, electricity)
 exits, items_map, signs, chests = room_draw.replace()
 
 #on initialise le joueur
 player = player.Player(1000, 400)
 
 #on définit les bouttons
-play_btn = button.Button(1280 // 2 - 3 * tile_size, 720 // 3 - tile_size, pygame.image.load("images/menu/play_btn.jpg"))
+play_btn = button.Button(1280 // 2 - 3 * tile_size, 720 // 3 - tile_size, play_btn_img)
                        
 #lancer la boucle du jeu
 run = True
@@ -91,7 +95,7 @@ while run:
                     col_count += 1
                 row_count += 1
             #la dessiner maintenant
-            room_draw = map.Map(room, items, chests_open, room_num, tile_size)
+            room_draw = map.Map(room, items, chests_open, room_num, tile_size, electricity)
             exits, items_map, signs, chests = room_draw.replace()
             if room_num == 11:
                 electricity = True
@@ -99,15 +103,24 @@ while run:
             for exit in exits:
                 if player.rect.colliderect(exit.rect.x - 100, exit.rect.y - 100, 200, 200):
                     exit.open, exit.go_back = True, True
-                    if exit.direction == "top":
-                        exit.rect.y -= 40
-                    elif exit.direction == "bottom":
-                        exit.rect.y += 40
-                    elif exit.direction == "left":
-                        exit.rect.x -= 40
-                    elif exit.direction == "right":
-                        exit.rect.x += 40
+                    exit.rect.x, exit.rect.y = exit.end_pos
                     exit.counter = 100
+
+            #modifier les portes de la salles, pour faire en sorte que si elles sont ouvertes sans electricité, elles le restent ensuite
+            for exit in exits:
+                if player.rect.colliderect(exit.rect.x - 100, exit.rect.y - 100, 200, 200):
+                    if exit.link == 1:
+                        room[0][15], room[0][16] = f"{room[0][15][:3]}O", f"{room[0][16][:3]}O"
+                        Rooms[room_y-1][room_x][17][15], Rooms[room_y-1][room_x][17][16] = f"{Rooms[room_y-1][room_x][17][15][:3]}O", f"{Rooms[room_y-1][room_x][17][16][:3]}O"
+                    elif exit.link == 2:
+                        room[17][15], room[17][16] = f"{room[17][15][:3]}O", f"{room[17][16][:3]}O"
+                        Rooms[room_y+1][room_x][0][15], Rooms[room_y+1][room_x][0][16] = f"{Rooms[room_y+1][room_x][0][15][:3]}O", f"{Rooms[room_y+1][room_x][0][16][:3]}O"
+                    elif exit.link == 3:
+                        room[8][0], room[9][0] = f"{room[8][0][:3]}O", f"{room[9][0][:3]}O"
+                        Rooms[room_y][room_x-1][8][31], Rooms[room_y][room_x-1][9][31] = f"{Rooms[room_y][room_x-1][8][31][:3]}O", f"{Rooms[room_y][room_x-1][9][31][:3]}O"
+                    elif exit.link == 4:    
+                        room[8][31], room[9][31] = f"{room[8][31][:3]}O", f"{room[9][31][:3]}O"
+                        Rooms[room_y][room_x+1][8][0], Rooms[room_y][room_x+1][9][0] = f"{Rooms[room_y][room_x+1][8][0][:3]}O", f"{Rooms[room_y][room_x+1][9][0][:3]}O"
 
         #afficher le sol
         screen.blit(bg_img, (0, 0))
@@ -149,7 +162,7 @@ while run:
     
     #si le menu est ouvert
     elif menu:        
-        screen.blit(pygame.transform.scale(pygame.image.load("images/menu/menu_bg.jpg"), (1280, 720)), (0, 0))
+        screen.blit(menu_bg_img, (0, 0))
         if play_btn.draw(screen):
             menu, game = False, True
 

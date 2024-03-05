@@ -2,7 +2,7 @@ import pygame
 
 class Map:
     """classe pour pouvoir dessiner la salle"""
-    def __init__(self, liste, items, chests, room_num, tile_size):
+    def __init__(self, liste, items, chests, room_num, tile_size, electricity):
         """créer une liste contient les images et les coordonnées à dessiner"""
         self.tile_list = []
 
@@ -12,7 +12,7 @@ class Map:
         #charger les images des blocs
         mur_img = pygame.transform.scale(pygame.image.load("images/map/mur.png"), (tile_size, tile_size))
         coin_img = pygame.transform.scale(pygame.image.load("images/map/coin.png"), (tile_size, tile_size))
-        glass_img = pygame.transform.scale(pygame.image.load("images/map/glass_wall.png"), (tile_size, tile_size))
+        #glass_img = pygame.transform.scale(pygame.image.load("images/map/glass_wall.png"), (tile_size, tile_size))
 
         #pour modifier les valeurs, les sorties, les itemms
         self.exits, self.items_map, items_verifications, chests_ver, self.signs, self.chests = [], [], [], [], [], []
@@ -49,12 +49,12 @@ class Map:
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
                 elif tile == 2:
-                    img = glass_img
+                    #img = glass_img
                     img_rect = img.get_rect()
                     img_rect.x, img_rect.y = col_count * tile_size, row_count * tile_size
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
-                #si elle commence par x, X, y ou Y, alors c'est une porte vers une autre salle
+                #si elle commence par E alors c'est une porte vers une autre salle
                 elif str(tile)[0] == "E":
                     x_, y_, link = 0, 0, 0
                     if row_count == 0 or row_count == 17:
@@ -79,7 +79,7 @@ class Map:
                         link = 3
                     elif col_count == 31:
                         link = 4
-                    exit = Exit(col_count * tile_size + x_, row_count * tile_size + y_, exit_dir, tile[1], link, tile[2])
+                    exit = Exit(col_count * tile_size + x_, row_count * tile_size + y_, exit_dir, tile[1], link, tile[2], tile[3], electricity)
                     self.exits.append(exit)
                 #si elle commence par un O, c'est un objet ramassable
                 elif str(tile)[0] == "O":
@@ -136,14 +136,14 @@ class Map:
 
 class Exit:
     """classe pour gérer les changements de salle"""
-    def __init__(self, x, y, dir, val, link, breakable):
+    def __init__(self, x, y, dir, val, link, breakable, open, electricity):
         """definir l'image de la porte, sa position, et ses variables"""
         if breakable == "B":
             img = pygame.image.load("images/glass_door.png")
         elif breakable == "U":
             img = pygame.image.load("images/iron_door.png")
-        #en fonction de si la porte est à droite et à gauche ou en haut et en bas, la porte est un rectangle plus long en longueur ou en hauteur
-        if dir == 'bottom': #On répère l'image à dessiner en fonction du point cardinal O, E, S, N
+        #on dessine la porte 
+        if dir == 'bottom':
             self.image = img
         elif dir == 'top':
             self.image = pygame.transform.rotate(img, 180)
@@ -176,6 +176,10 @@ class Exit:
         #variables pour l'ouverture des portes
         self.open, self.go_back = False, False
         self.counter, self.collisions_counter = 0, 0
+        #si la porte était deja ouverte sans electricité
+        if open == "O" and electricity == False:
+            self.rect.x, self.rect.y = self.end_pos
+            self.open, self.go_back = True, True
 
     def open_door(self):
         """ouvrir la porte"""
@@ -235,10 +239,6 @@ class Exit:
             #si la porte est réfermé, remettre à 0 les variables
             if self.start_pos == (self.rect.x, self.rect.y):
                 self.reset()
-        
-        else:
-            if self.open:
-                self.image = pygame.image.load("images/glass_door_break.png")
 
         self.draw(screen)
 
@@ -250,8 +250,12 @@ class Item:
     """classe pour gérer les objets au sol récupérable"""
     def __init__(self, x, y, image1, room):
         #l'image
-        img = pygame.image.load(f"images/{image1[1:]}.png")
-        self.image = pygame.transform.scale(img, (40, 40))
+        if image1[1:4] == "key":
+            img = pygame.transform.scale(pygame.image.load(f"images/level{image1[4]}.png"), (40, 25))
+            y += 7.5
+        else:
+            img = pygame.transform.scale(pygame.image.load(f"images/{image1[1:]}.png"), (40, 40))
+        self.image = img
         #les coordonnées
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = x, y
