@@ -6,7 +6,7 @@ from os import path
 import map
 import player
 import rooms
-import button
+import interface
 
 #initialiser pygame
 pygame.init()
@@ -39,9 +39,7 @@ electricity = False
 
 #celle du sol
 bg_img = pygame.image.load("images/map/floor.jpg")
-#celles du menu
-play_btn_img = pygame.image.load("images/menu/play_btn.jpg")
-menu_bg_img = pygame.transform.scale(pygame.image.load("images/menu/menu_bg.png"), (1280, 720))
+
 
 def draw_badge_level(x, y, num):
    """fonction pour afficher le niveau de badge que possède le joueur"""
@@ -66,8 +64,7 @@ exits, items_map, signs, chests = room_draw.replace()
 #on initialise le joueur
 player = player.Player(1000, 400)
 
-#on définit les bouttons
-play_btn = button.Button(1280 // 2 - 3 * tile_size, 720 // 3 - tile_size, play_btn_img)
+
                        
 #lancer la boucle du jeu
 run = True
@@ -162,8 +159,8 @@ while run:
     
     #si le menu est ouvert
     elif menu:        
-        screen.blit(menu_bg_img, (0, 0))
-        if play_btn.draw(screen):
+        menu_closed = interface.draw_menu(screen)
+        if menu_closed:
             menu, game = False, True
 
     #si un panneau est affiché à l'écran
