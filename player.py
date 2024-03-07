@@ -9,13 +9,13 @@ class Player:
 
         #pour chaque liste, on a une série d'images, et on va faire en sorte que l'image du joueur varie d'une image à l'autre pour simuler un GIF
         for number in range(1, 4):
-            img_right = pygame.transform.scale(pygame.image.load(f"images/player/droite{number}.png"), (40, 40))
+            img_right = pygame.transform.scale(pygame.image.load(f"images/player/right{number}.png"), (40, 40))
             self.images_walk_right.append(img_right)
             img_left = pygame.transform.scale(pygame.image.load(f"images/player/left{number}.png"), (40, 40))
             self.images_walk_left.append(img_left)
             img_up = pygame.transform.scale(pygame.image.load(f"images/player/up{number}.png"), (40, 40))
             self.images_walk_up.append(img_up)
-            img_down = pygame.transform.scale(pygame.image.load(f"images/player/bas{number}.png"), (40, 40))
+            img_down = pygame.transform.scale(pygame.image.load(f"images/player/down{number}.png"), (40, 40))
             self.images_walk_down.append(img_down)
         #on définir l'image de départ
         self.image = self.images_walk_right[0]
@@ -91,15 +91,30 @@ class Player:
             dy_test = 0
         self.dx, self.dy = dx_test, dy_test
 
-
-    def collisions_exits(self, exit):
+    def collisions_exits(self, exit, electricity, screen):
         """gérer les collisions avec les sorties salles pour changer la salle affichée"""
-        if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
-            #on vérifie si le joueur à le niveau de pass requis
-            if self.room_badge >= int(exit.value) and pygame.key.get_pressed()[pygame.K_e]:
-                #en fonction de ou mène la porte, on attribue des coordonnées au joueur qui sont différentes
-                exit.open = True
-                #si le joueur n'a pas un niveau de pass requis, alors pas de déplacement
+        #s'il y a de l'electricité
+        if electricity:
+            if exit.rect.colliderect(self.rect.x + self.dx - 5, self.rect.y + self.dy - 5, self.image.get_width() + 10, self.image.get_height() + 10):
+                #on vérifie si le joueur à le niveau de pass requis
+                if exit.breakable == False and exit.open == False:
+                    screen.blit(pygame.transform.scale(pygame.image.load("images/tell.png"), (300, 40)), (940, 40))
+                if self.room_badge >= int(exit.value) and pygame.key.get_pressed()[pygame.K_e]:
+                    #en fonction de ou mène la porte, on attribue des coordonnées au joueur qui sont différentes
+                    exit.open = True
+                    #si le joueur n'a pas un niveau de pass requis, alors pas de déplacement
+                if exit.breakable == True:
+                    exit.open = True
+        else:
+            for item in self.items:
+                if item.value == "hammer":
+                    if exit.rect.colliderect(self.rect.x + self.dx - 5, self.rect.y + self.dy - 5, self.image.get_width() + 10, self.image.get_height() + 10):
+                        if exit.breakable and exit.open == False:
+                            screen.blit(pygame.transform.scale(pygame.image.load("images/tell.png"), (300, 40)), (940, 40))
+                            if pygame.key.get_pressed()[pygame.K_e]:
+                                exit.open = True
+                                exit.rect.x, exit.rect.y = exit.end_pos
+
         dx_test, dy_test = self.dx, self.dy
         if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()) == False:
             if exit.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
@@ -123,7 +138,8 @@ class Player:
             self.items_map.remove(item)
         
     def collisions_signs(self, sign):
-        if sign.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+        """les collisisons avec les panneaux"""
+        if sign.rect_item.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
             if self.sign_counter >= 50:
                 if pygame.key.get_pressed()[pygame.K_e]:
                     if sign.draw == False:
@@ -134,43 +150,68 @@ class Player:
         self.sign_counter += 1
 
     def collisions_chests(self, chest):
-
-        if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+        '''les collisions avec les coffres'''
+        if chest.rect.colliderect(self.rect.x + self.dx - 5, self.rect.y + self.dy - 5, self.image.get_width() + 10, self.image.get_height() + 10):
             if pygame.key.get_pressed()[pygame.K_e]:
                 if chest.open == False:
                     chest.open = True
-                    self.items_map.append(chest.contenu)
                     self.chests.remove(chest)
-                    self.chests_a.append(chest)
+                    self.chests_open.append(chest)
+                    if chest.contenu != "":
+                        self.items_map.append(chest.contenu)
+                elif chest.open:
+                    #si on ouvre le coffre, ajouter l'item dans l'inventaire
+                    if chest.room == self.room_num:
+                        if chest.item_took == False:
+                            if chest.contenu != "":
+                                if chest.item_cooldown == True:
+                                    self.items.append(chest.contenu)
+                                    self.items_map.remove(chest.contenu)
+                                    chest.item_took = True
 
         dx_test, dy_test = self.dx, self.dy
-        if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()) == False:
-            if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
-                if chest.rect.x != self.rect.x + 40 and chest.rect.y != self.rect.y - 40:
-                    dy_test = 0
-        else:
-            dx_test = 0
-        if chest.rect.colliderect(self.rect.x, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()) == False:
-            if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
-                if chest.rect.x != self.rect.x - 40 and chest.rect.y != self.rect.y + 40:
-                    dx_test = 0
-        else:
-            dy_test = 0
+        if chest.room == self.room_num:
+            if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y, self.image.get_width(), self.image.get_height()) == False:
+                if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+                    if chest.rect.x != self.rect.x + 40 and chest.rect.y != self.rect.y - 40:
+                        dy_test = 0
+            else:
+                dx_test = 0
+            if chest.rect.colliderect(self.rect.x, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()) == False:
+                if chest.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
+                    if chest.rect.x != self.rect.x - 40 and chest.rect.y != self.rect.y + 40:
+                        dx_test = 0
+            else:
+                dy_test = 0
         self.dx, self.dy = dx_test, dy_test
 
     def use_items(self):
         "une fois un item dans l'inventaire, on peut l'utiliser (une clé par exemple augmente le niveau de pass pour les sorties)"
         keys = []
-
         for item in self.items:
             if item.value[0:3] == "key":
                 keys.append(int(item.value[3]))
                 self.room_badge = max(keys)
 
-    def update(self, screen, room_draw, items, items_map, exits, signs, chests, chests_a, room_badge, room_x, room_y):
+    def change_room(self):
+        '''changer la room si le joueur sort des limites'''
+        if self.rect.x > 1240:
+            self.room_x += 1
+            self.rect.x = 40
+        elif self.rect.x < 0:
+            self.room_x -= 1
+            self.rect.x = 1280 - 40 * 2
+        elif self.rect.y > 680:
+            self.room_y += 1
+            self.rect.y = 40
+        elif self.rect.y < 0:
+            self.room_y -= 1
+            self.rect.y = 720 - 40 * 2
+
+    def update(self, screen, room_draw, items, items_map, exits, signs, chests, chests_open, room_badge, room_num, room_x, room_y, electricity):
         """gérer tous les évènements"""
         #on crée un objet avec self pour pouvoir changer les variables avec la méthode replace
-        self.exits, self.items_map, self.items, self.signs, self.chests, self.chests_a, self.room_badge, self.room_x, self.room_y = exits, items_map, items, signs, chests, chests_a, room_badge, room_x, room_y
+        self.exits, self.items_map, self.items, self.signs, self.chests, self.chests_open, self.room_badge, self.room_num, self.room_x, self.room_y = exits, items_map, items, signs, chests, chests_open, room_badge, room_num, room_x, room_y
 
         #les variables qui symbolise le déplacement qui sera réalisé si possible
         self.dx, self.dy = 0, 0
@@ -203,33 +244,32 @@ class Player:
         
         #gérer les collisions avec les portes de sorties
         for exit in self.exits:
-            self.collisions_exits(exit)
+            self.collisions_exits(exit, electricity, screen)
+            for exit_ in self.exits:
+                if electricity == False:
+                    if exit.link == exit_.link:
+                        if (exit.rect.x, exit.rect.y) == exit.end_pos:
+                            exit_.rect.x, exit_.rect.y = exit_.end_pos
 
         #et le collisions avec les items au sol
         for item in self.items_map:
             self.collisions_items(item)
 
+        #les collisions avec les panneaux, les coffres ouverts et fermés
         for sign in signs:
             self.collisions_signs(sign)
 
         for chest in chests:
             self.collisions_chests(chest)
         
+        for chest in chests_open:
+            self.collisions_chests(chest)
+        
         #on utilise les items
         self.use_items()
 
-        if self.rect.x > 1240:
-            self.room_x += 1
-            self.rect.x = 40
-        elif self.rect.x < 0:
-            self.room_x -= 1
-            self.rect.x = 1280 - 40 * 2
-        elif self.rect.y > 680:
-            self.room_y += 1
-            self.rect.y = 40
-        elif self.rect.y < 0:
-            self.room_y -= 1
-            self.rect.y = 720 - 40 * 2
+        #on fait changer le joueur de room si besoin
+        self.change_room()
 
         #déplacer le joueur et le dessiner
         self.rect.x += self.dx
@@ -238,4 +278,4 @@ class Player:
 
     def replace(self):
         """on change les variables qui ont été modifiés"""
-        return self.exits, self.items_map, self.items, self.chests, self.chests_a, self.room_badge, self.room_x, self.room_y
+        return self.exits, self.items_map, self.items, self.chests, self.chests_open, self.room_badge, self.room_x, self.room_y

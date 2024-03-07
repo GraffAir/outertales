@@ -2,25 +2,24 @@ import pygame
 
 class Map:
     """classe pour pouvoir dessiner la salle"""
-    def __init__(self, liste, items, chests, room_num, tile_size):
+    def __init__(self, liste, items, chests, room_num, tile_size, electricity):
         """créer une liste contient les images et les coordonnées à dessiner"""
         self.tile_list = []
 
         #pour les items au sol
-        item_already = False
-        chest_already = False
+        item_already, chest_already = False, False
 
         #charger les images des blocs
         mur_img = pygame.transform.scale(pygame.image.load("images/map/mur.png"), (tile_size, tile_size))
         coin_img = pygame.transform.scale(pygame.image.load("images/map/coin.png"), (tile_size, tile_size))
+        #glass_img = pygame.transform.scale(pygame.image.load("images/map/glass_wall.png"), (tile_size, tile_size))
 
         #pour modifier les valeurs, les sorties, les itemms
         self.exits, self.items_map, items_verifications, chests_ver, self.signs, self.chests = [], [], [], [], [], []
 
         #pour les portes de sorties
         exit_dir = 'left'
-        x_ = 0
-        y_ = 0
+        x_, y_ = 0, 0
         #parcourir la liste
         row_count = 0
         for row in liste:
@@ -49,7 +48,13 @@ class Map:
                     img_rect.x, img_rect.y = col_count * tile_size, row_count * tile_size
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
-                #si elle commence par x, X, y ou Y, alors c'est une porte vers une autre salle
+                elif tile == 2:
+                    #img = glass_img
+                    img_rect = img.get_rect()
+                    img_rect.x, img_rect.y = col_count * tile_size, row_count * tile_size
+                    tile = (img, img_rect)
+                    self.tile_list.append(tile)
+                #si elle commence par E alors c'est une porte vers une autre salle
                 elif str(tile)[0] == "E":
                     x_, y_, link = 0, 0, 0
                     if row_count == 0 or row_count == 17:
@@ -58,14 +63,14 @@ class Map:
                         elif col_count == 16:
                             exit_dir = "right"
                     if row_count == 0:
-                        y_ = tile_size - 4
+                        y_ = tile_size - 7
                     elif col_count == 0 or col_count == 31:
                         if row_count == 8:
                             exit_dir = "top"
                         elif row_count == 9:
                             exit_dir = "bottom"
                     if col_count == 0:
-                        x_ = tile_size - 4
+                        x_ = tile_size - 7
                     if row_count == 0:
                         link = 1
                     elif row_count == 15:
@@ -74,7 +79,7 @@ class Map:
                         link = 3
                     elif col_count == 31:
                         link = 4
-                    exit = Exit(col_count * tile_size + x_, row_count * tile_size + y_, exit_dir, tile[1], link)
+                    exit = Exit(col_count * tile_size + x_, row_count * tile_size + y_, exit_dir, tile[1], link, tile[2], tile[3], electricity)
                     self.exits.append(exit)
                 #si elle commence par un O, c'est un objet ramassable
                 elif str(tile)[0] == "O":
@@ -93,13 +98,14 @@ class Map:
                     if item_already == False:
                         self.items_map.append(item)
                     item_already = False
+                #les panneaux
                 elif str(tile)[0] == "S":
-                    img = pygame.transform.scale(pygame.image.load(f"images/signs/sign{str(tile)[1]}.png"), (1000, 500))       
-                    img_rect = img.get_rect()
-                    img_rect.x, img_rect.y = col_count * tile_size, row_count * tile_size
-                    sign = Sign(img, img_rect.x, img_rect.y)
+                    sign_ = tile
+                    x, y = col_count * tile_size, row_count * tile_size
+                    sign = Sign(sign_, x, y)
                     self.signs.append(sign)
                 elif isinstance(tile, tuple):
+                    #les coffres
                     if tile [0] == "C":
                         chest = Chest(col_count * tile_size, row_count * tile_size, tile[1], tile[2], room_num)
                         #créer une liste contenants les coordonnées et la salle de chaque objet DEJA RAMASSE
@@ -130,21 +136,33 @@ class Map:
 
 class Exit:
     """classe pour gérer les changements de salle"""
-    def __init__(self, x, y, dir, val, link):
-        img = pygame.image.load("images/exit.png")
-        #en fonction de si la porte est à droite et à gauche ou en haut et en bas, la porte est un rectangle plus long en longueur ou en hauteur
-        if dir in ["top", "bottom"]: #On répère l'image à dessiner en fonction du point cardinal O, E, S, N
-            self.image = pygame.transform.scale(img, (7, 40))
-        elif dir in ["left", "right"]:
-            self.image = pygame.transform.scale(img, (40, 7))
+    def __init__(self, x, y, dir, val, link, breakable, open, electricity):
+        """definir l'image de la porte, sa position, et ses variables"""
+        if breakable == "B":
+            img = pygame.image.load("images/glass_door.png")
+        elif breakable == "U":
+            img = pygame.image.load("images/iron_door.png")
+        #on dessine la porte 
+        if dir == 'bottom':
+            self.image = img
+        elif dir == 'top':
+            self.image = pygame.transform.rotate(img, 180)
+        elif dir == 'left':
+            self.image = pygame.transform.rotate(img, 270)
+        elif dir == 'right':
+            self.image = pygame.transform.rotate(img, 90)
         #les coordonnées
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = x, y
         #la valeur d'une porte c'est un chiffre qui indique quel niveau de pass il faut pour la franchir
         self.value = val
         #pour indiquer vers ou mène la porte, et a quel groupe elle appartient
-        self.direction = dir
-        self.link = link
+        self.direction, self.link = dir, link
+        #si la porte est cassable ou non avec un marteau
+        if breakable == 'B':
+            self.breakable = True
+        elif breakable == "U":
+            self.breakable = False
         #définir la position de départ et celle d'arrivée
         self.start_pos = (x, y)
         if self.direction == 'right':
@@ -156,11 +174,13 @@ class Exit:
         elif self.direction == 'bottom':
             self.end_pos = (x, y + 40)
         #variables pour l'ouverture des portes
-        self.open = False
-        self.counter = 0
-        self.go_back = False
-        self.collisions_counter = 0
-        
+        self.open, self.go_back = False, False
+        self.counter, self.collisions_counter = 0, 0
+        #si la porte était deja ouverte sans electricité
+        if open == "O" and electricity == False:
+            self.rect.x, self.rect.y = self.end_pos
+            self.open, self.go_back = True, True
+
     def open_door(self):
         """ouvrir la porte"""
         if self.direction == 'top':
@@ -182,7 +202,7 @@ class Exit:
             self.dx = 1
         elif self.direction == "right":
             self.dx = -1
-
+            
     def check_collisions_player(self, player):
         """vérifier les colisions avec le joueur"""
         if player.rect.colliderect(self.rect.x + self.dx, self.rect.y + self.dy, self.image.get_width(), self.image.get_height()):
@@ -191,34 +211,36 @@ class Exit:
 
     def reset(self):
         """remettre à 0 certaines variables une fois la porte refermé"""
-        self.counter = 0
+        self.counter, self.collisions_counter = 0, 0
         self.go_back, self.open = False, False
-        self.collisions_counter = 0
 
-    def update(self, player):
+    def update(self, player, screen, electricity):
         """methode pour faire déplacer les portes, et les faire revenir à leurs positions"""
-        self.dx, self.dy = 0, 0
+        if electricity:
+            self.dx, self.dy = 0, 0
 
-        #ouvrir la porte
-        if self.open == True and self.go_back == False:
-            self.open_door()
+            #ouvrir la porte
+            if self.open == True and self.go_back == False:
+                self.open_door()
 
-        #déplacer la porte dans l'autre sens, une fois la position de fin atteinte
-        if self.end_pos == (self.rect.x + self.dx, self.rect.y + self.dy):
-            self.go_back = True
+            #déplacer la porte dans l'autre sens, une fois la position de fin atteinte
+            if self.end_pos == (self.rect.x + self.dx, self.rect.y + self.dy):
+                self.go_back = True
 
-        if self.open == True and self.go_back == True:
-            self.counter += 1
-            if self.counter >= 150:
-                self.close_door()
-                self.check_collisions_player(player)
+            if self.open == True and self.go_back == True:
+                self.counter += 1
+                if self.counter >= 150:
+                    self.close_door()
+                    self.check_collisions_player(player)
 
-        self.rect.x += self.dx
-        self.rect.y += self.dy
+            self.rect.x += self.dx
+            self.rect.y += self.dy
 
-        #si la porte est réfermé, remettre à 0 les variables
-        if self.start_pos == (self.rect.x, self.rect.y):
-            self.reset()
+            #si la porte est réfermé, remettre à 0 les variables
+            if self.start_pos == (self.rect.x, self.rect.y):
+                self.reset()
+
+        self.draw(screen)
 
     def draw(self, screen):
         """dessiner la porte de sortie"""
@@ -228,12 +250,15 @@ class Item:
     """classe pour gérer les objets au sol récupérable"""
     def __init__(self, x, y, image1, room):
         #l'image
-        img = pygame.image.load(f"images/{image1[1:]}.png")
-        self.image = pygame.transform.scale(img, (40, 40))
+        if image1[1:4] == "key":
+            img = pygame.transform.scale(pygame.image.load(f"images/level{image1[4]}.png"), (40, 25))
+            y += 7.5
+        else:
+            img = pygame.transform.scale(pygame.image.load(f"images/{image1[1:]}.png"), (40, 40))
+        self.image = img
         #les coordonnées
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = x, y
-
         #sa valeur (ex : un pass de niveau 3)
         self.value = image1[1:]
         #la salle dans laquelle il à été pris
@@ -244,35 +269,64 @@ class Item:
         screen.blit(self.image, self.rect)
     
 class Sign:
-    def __init__(self, img2, x, y):
-        self.image = pygame.transform.scale(pygame.image.load("images/signs/sign.png"), (40, 40))    
-        self.rect = self.image.get_rect()   
-        self.rect.x = x
-        self.rect.y = y
-        self.image2 = img2
-        self.rect2 = self.image2.get_rect()
-        self.rect2.x = 140
-        self.rect2.y = 110
+    def __init__(self, sign, x, y):
+        """définir l'image du panneau, sa position, ses variables"""
+        self.image_item = pygame.transform.scale(pygame.image.load("images/signs/sign.png"), (40, 40))    
+        self.rect_item = self.image_item.get_rect()   
+        self.rect_item.x, self.rect_item.y = x, y
+        self.image_sign = pygame.transform.scale(pygame.image.load(f"images/signs/sign{sign[1]}.png"), (1000, 500))
+        self.rect_sign = self.image_sign.get_rect()
+        self.rect_sign.x, self.rect_sign.y = 140, 110
         self.draw = False
 
     def draw_item(self, screen):
-        screen.blit(self.image, self.rect)
+        """dessiner l'item du panneau au sol"""
+        screen.blit(self.image_item, self.rect_item)
 
-    def draw_(self, screen):
-        screen.blit(self.image2, self.rect2)
+    def draw_sign(self, screen):
+        """dessiner le panneau quand il sera cliqué"""
+        screen.blit(self.image_sign, self.rect_sign)
+
+    def update(self, screen, sign, game):
+        """mettre à jour, donc dessiner soit l'item, soit le panneau en grand"""
+        if self.draw:
+            self.draw_sign(screen)
+            sign, game = True, False
+        else:
+            self.draw_item(screen)
+        return sign, game
 
 class Chest:
     def __init__(self, x, y, chest, contenu, room_num):
-        self.image = pygame.transform.scale(pygame.image.load(f"images/{chest}.png"), (40, 40))
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        self.contenu = Item(x, y, contenu, room_num)
+        """définir quel coffre, son contenu, sa position..."""
+        self.image_chest = pygame.transform.scale(pygame.image.load(f"images/{chest}.png"), (40, 40))
+        self.image_chest_open = pygame.transform.scale(pygame.image.load(f"images/{chest}_open.png"), (40, 40))
+        self.rect = self.image_chest.get_rect()
+        self.rect.x, self.rect.y = x, y
+        if contenu != "":
+            self.contenu = Item(x, y, contenu, room_num)
+        else:
+            self.contenu = contenu
         self.open = False
         self.room = room_num
+        self.item_took = False
+        self.item_cooldown = 0
 
     def draw(self, screen):
-        screen.blit(self.image, self.rect)
+        """dessiner le coffre"""
+        screen.blit(self.image_chest, self.rect)
     
     def draw_item(self, screen):
+        """dessiner l'item dans le coffre"""
         screen.blit(self.contenu.image, self.contenu.rect)
+
+    def update(self, screen, room_num):
+        """changer l'image du coffre s'il est ouvert, l'afficher, et affiche l'item si le coffre est ouvert"""
+        if self.open:
+            self.image_chest = self.image_chest_open
+            if self.room == room_num:
+                self.draw(screen)
+            if pygame.key.get_pressed()[pygame.K_e] == False:
+                self.item_cooldown = True
+        else:
+            self.draw(screen)
