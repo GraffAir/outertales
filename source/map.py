@@ -119,7 +119,7 @@ class Map:
                             if [chest.rect.x, chest.rect.y, chest.room] == chests_ver[len(chests_ver)-1]:
                                 #ajoute 1 au compteur si l'item à déja été pris
                                 chest_already = True
-                                if chest_already == True and ch.item_took == False:
+                                if chest_already == True and ch.item_took == False and ch.contenu != "":
                                     #ch.contenu = Item(col_count * tile_size, row_count * tile_size, tile[2], room_num)
                                     self.items_map.append(ch.contenu)
                         #pour chaque item sur le sol, il vérifie s'il en existe deja un semblable dans l'inventaire (avec les coordonnées et le numéro de salle : il ne peut y en avoir qu'un qui y correspond, à savoir le même, qui serait deja ramassé)
