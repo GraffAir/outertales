@@ -2,7 +2,7 @@ import pygame
 
 class Map:
     """classe pour pouvoir dessiner la salle"""
-    def __init__(self, liste, items, chests, room_num, tile_size, electricity):
+    def __init__(self, liste, items, chests_open, room_num, tile_size, electricity):
         """créer une liste contient les images et les coordonnées à dessiner"""
         self.tile_list = []
 
@@ -15,7 +15,7 @@ class Map:
         #glass_img = pygame.transform.scale(pygame.image.load("images/map/glass_wall.png"), (tile_size, tile_size))
 
         #pour modifier les valeurs, les sorties, les itemms
-        self.exits, self.items_map, items_verifications, chests_ver, self.signs, self.chests = [], [], [], [], [], []
+        self.exits, self.items_map, items_verifications, chests_ver, self.signs, self.chests, self.props = [], [], [], [], [], [], []
 
         #pour les portes de sorties
         exit_dir = 'left'
@@ -104,20 +104,25 @@ class Map:
                     x, y = col_count * tile_size, row_count * tile_size
                     sign = Sign(sign_, x, y)
                     self.signs.append(sign)
+                elif str(tile)[0] == "P":
+                    prop = Props(col_count * tile_size, row_count * tile_size, tile[1:])
+                    self.props.append(prop)
                 elif isinstance(tile, tuple):
                     #les coffres
-                    if tile [0] == "C":
-                        chest = Chest(col_count * tile_size, row_count * tile_size, tile[1], tile[2], room_num)
+                    if tile[0] == "C":
+                        chest = Chest(col_count * tile_size, row_count * tile_size, tile[1], tile[2], room_num, tile[3])
                         #créer une liste contenants les coordonnées et la salle de chaque objet DEJA RAMASSE
-                        for ch in chests:
+                        for ch in chests_open:
                             #ajouter les items ramassé qui ne sont pas dans la liste 
                             if [ch.rect.x, ch.rect.y, ch.room] not in chests_ver:
                                 chests_ver.append([ch.rect.x, ch.rect.y, ch.room])
-                        #pour chaque item sur le sol, il vérifie s'il en existe deja un semblable dans l'inventaire (avec les coordonnées et le numéro de salle : il ne peut y en avoir qu'un qui y correspond, à savoir le même, qui serait deja ramassé)
-                        for index in range(len(chests_ver)):
-                            if [chest.rect.x, chest.rect.y, chest.room] == chests_ver[index]:
+                            if [chest.rect.x, chest.rect.y, chest.room] == chests_ver[len(chests_ver)-1]:
                                 #ajoute 1 au compteur si l'item à déja été pris
                                 chest_already = True
+                                if chest_already == True and ch.item_took == False:
+                                    #ch.contenu = Item(col_count * tile_size, row_count * tile_size, tile[2], room_num)
+                                    self.items_map.append(ch.contenu)
+                        #pour chaque item sur le sol, il vérifie s'il en existe deja un semblable dans l'inventaire (avec les coordonnées et le numéro de salle : il ne peut y en avoir qu'un qui y correspond, à savoir le même, qui serait deja ramassé)
                         #et s'il n'a pas été ramassé, alors on l'ajoute à la liste des objets au sol à dessiner, et à considérer ses collisions
                         if chest_already == False:
                             self.chests.append(chest)
@@ -127,7 +132,7 @@ class Map:
     
     def replace(self):
         """une méthode pour pouvoir remplacer les variables"""
-        return self.exits, self.items_map, self.signs, self.chests
+        return self.exits, self.items_map, self.signs, self.chests, self.props
     
     def draw(self, screen):
         """méthode pour dessiner cette liste qui contient toutes les coordonnées et les images des blocs à placer"""
@@ -248,13 +253,13 @@ class Exit:
 
 class Item:
     """classe pour gérer les objets au sol récupérable"""
-    def __init__(self, x, y, image1, room):
+    def __init__(self, x, y, image1, room, chest=False):
         #l'image
         if image1[1:4] == "key":
-            img = pygame.transform.scale(pygame.image.load(f"images/level{image1[4]}.png"), (40, 25))
+            img = pygame.transform.scale(pygame.image.load(f"images/items/level{image1[4]}.png"), (40, 25))
             y += 7.5
         else:
-            img = pygame.transform.scale(pygame.image.load(f"images/{image1[1:]}.png"), (40, 40))
+            img = pygame.transform.scale(pygame.image.load(f"images//items/{image1[1:]}.png"), (40, 40))
         self.image = img
         #les coordonnées
         self.rect = self.image.get_rect()
@@ -263,6 +268,8 @@ class Item:
         self.value = image1[1:]
         #la salle dans laquelle il à été pris
         self.room = room
+        self.chest = chest
+        self.chest_open = False
 
     def draw(self, screen):
         """dessiner l'item"""
@@ -292,25 +299,34 @@ class Sign:
         if self.draw:
             self.draw_sign(screen)
             sign, game = True, False
+            return True, False
         else:
             self.draw_item(screen)
         return sign, game
 
 class Chest:
-    def __init__(self, x, y, chest, contenu, room_num):
+    def __init__(self, x, y, chest, contenu, room_num, locked):
         """définir quel coffre, son contenu, sa position..."""
         self.image_chest = pygame.transform.scale(pygame.image.load(f"images/{chest}.png"), (40, 40))
         self.image_chest_open = pygame.transform.scale(pygame.image.load(f"images/{chest}_open.png"), (40, 40))
         self.rect = self.image_chest.get_rect()
         self.rect.x, self.rect.y = x, y
         if contenu != "":
-            self.contenu = Item(x, y, contenu, room_num)
+            self.contenu = Item(x, y, contenu, room_num, True)
         else:
             self.contenu = contenu
         self.open = False
         self.room = room_num
         self.item_took = False
         self.item_cooldown = 0
+        self.try_open = None
+        self.code = None
+        if len(locked) == 4:
+            self.locked = True
+            self.try_open = False
+            self.code = locked
+        else:
+            self.locked = False
 
     def draw(self, screen):
         """dessiner le coffre"""
@@ -320,8 +336,12 @@ class Chest:
         """dessiner l'item dans le coffre"""
         screen.blit(self.contenu.image, self.contenu.rect)
 
-    def update(self, screen, room_num):
+    def update(self, screen, room_num, game):
         """changer l'image du coffre s'il est ouvert, l'afficher, et affiche l'item si le coffre est ouvert"""
+        lock = False
+        if self.try_open:
+            game = False
+            lock = True
         if self.open:
             self.image_chest = self.image_chest_open
             if self.room == room_num:
@@ -330,3 +350,13 @@ class Chest:
                 self.item_cooldown = True
         else:
             self.draw(screen)
+        return game, lock
+    
+class Props:
+    def __init__(self, x, y, image):
+        self.image = pygame.image.load(f"images/props/{image}.png")
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = x, y
+    
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
