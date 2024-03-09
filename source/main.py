@@ -6,7 +6,7 @@ from os import path
 import map
 import player
 import rooms
-import button
+import interface
 
 #initialiser pygame
 pygame.init()
@@ -67,9 +67,6 @@ exits, items_map, signs, chests, props = room_draw.replace()
 
 #on initialise le joueur
 player = player.Player(1000, 400)
-
-#on définit les bouttons
-play_btn = button.Button(1280 // 2 - 3 * tile_size, 720 // 3 - tile_size, play_btn_img)
                        
 #lancer la boucle du jeu
 run = True
@@ -170,8 +167,7 @@ while run:
     
     #si le menu est ouvert
     elif menu:        
-        screen.blit(menu_bg_img, (0, 0))
-        if play_btn.draw(screen):
+        if interface.draw_menu(screen):
             menu, game = False, True
 
     #si un panneau est affiché à l'écran
