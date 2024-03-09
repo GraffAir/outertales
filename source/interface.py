@@ -1,7 +1,7 @@
 import pygame
 pygame.font.init()
 
-font_header1 = pygame.font.SysFont('Courier New', 70)
+font_header1 = pygame.font.SysFont('Courier New', 70, bold=True)
 font_header2 = pygame.font.SysFont('Courier New', 50)
 
 # on définit les images du menu
@@ -39,7 +39,7 @@ class Button:
         return action
 
 # on définit les bouttons
-play_btn = Button(100, 170, textbutton_play, (30 * 6, 30 * 2))
+play_btn = Button(100, 200, textbutton_play, (30 * 6, 30 * 2))
 
 def draw_menu(screen):
     """fonction qui sera appellé à chaque boucle du jeu où le menu est allumé"""
