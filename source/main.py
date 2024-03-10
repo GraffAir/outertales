@@ -7,7 +7,6 @@ import map
 import player
 import rooms
 import interface
-import sound
 
 #initialiser pygame
 pygame.init()
@@ -26,18 +25,21 @@ room_x, room_y = 0, 0
 #les portes de sorties à considérer en collisions, les items au sol et ceux de l'inventaire, les coffres ouverts et fermés.
 exits, items_map, items, signs, chests, chests_open, props = [], [], [], [], [], [], []
 #le niveau de pass pour passer les portes
-room_badge = 0
+room_badge = 1
 #la salle actuelle et son numéro d'identification
 room = []
 room_num = 1
 #si le jeu est en cours, ou si le joueur est dans le menu, ou s'il regarde un panneau
 game, menu, sign  = False, True, False
+chest = False
 #compteur pour les panneaux        
 sign_counter = 0
+chest_counter = 0
 electricity = False
 lock = False
 try_ = ""
 lock_ver = False
+chest_ver = False
 #charger les images
 
 #celle du sol
@@ -77,9 +79,6 @@ while run:
 
     #si le jeu est en cours
     if game:
-        #test dialogues
-        if pygame.key.get_pressed()[pygame.K_p]:
-            sound.dialogues(["je ne pense pas qu'il soit nécessaire de faire cela", "personnelement je pense que si", "mais vous êtes fou ma parole"] , screen)
         #afficher le menu si le joueur appuie sur ECHAP
         if pygame.key.get_pressed()[pygame.K_ESCAPE]:
             game, menu = False, True
@@ -149,6 +148,13 @@ while run:
 
         for chest in chests_open:
             game, lock_ver = chest.update(screen, room_num, game)
+            if chest.watched == True:
+                chest_ver = True
+        
+        if chest_ver:
+            chest = True
+            game = False
+            chest_ver = False
         
         #afficher les items sur la map
         for item in items_map:
@@ -188,6 +194,11 @@ while run:
         for item in items_map:
             item.draw(screen)
 
+        for chest in chests:
+            chest.draw(screen)
+
+        for chest in chests_open:
+            chest.draw(screen)
         #afficher le panneau
         for sign in signs:
             if sign.draw == True:
@@ -242,7 +253,35 @@ while run:
             for ch in chests:
                 ch.try_open = False
 
+    elif chest:
+        chest_counter += 1
+        screen.blit(bg_img, (0, 0))
+        room_draw.draw(screen)
 
+        for exit in exits:
+            exit.draw(screen)
+        
+        for item in items_map:
+            item.draw(screen)
+
+        for chest in chests:
+            chest.draw(screen)
+
+        for prop in props:
+            prop.draw(screen)
+
+        for ch in chests_open:
+            if ch.room == room_num and ch.watched == False:
+                ch.draw(screen)
+
+        for ch in chests_open:
+            if ch.watched == True:
+                screen.blit(pygame.transform.scale(pygame.image.load(f"images/ref_chest/{ch.ref}.png"), (560, 560)), (360, 80))
+                if pygame.key.get_pressed()[pygame.K_e] or pygame.key.get_pressed()[pygame.K_UP] or pygame.key.get_pressed()[pygame.K_DOWN] or pygame.key.get_pressed()[pygame.K_LEFT] or pygame.key.get_pressed()[pygame.K_RIGHT]:
+                    if chest_counter >= 50:
+                        chest, game = False, True
+                        chest_counter = 0
+                        ch.watched = False
     #permet de  quitter le jeu
     for event in pygame.event.get():
         if event.type == pygame.QUIT:

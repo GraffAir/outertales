@@ -36,7 +36,8 @@ class Player:
         self.speed = 4
 
         #pour les panneaux
-        self.sign_counter = 100
+        self.sign_counter = 50
+        self.chest_counter = 50
 
     def move_left(self):
         """gérer le déplacement vers la gauche"""
@@ -98,7 +99,7 @@ class Player:
         """gérer les collisions avec les sorties salles pour changer la salle affichée"""
         #s'il y a de l'electricité
         if electricity:
-            if exit.rect.colliderect(self.rect.x + self.dx - 5, self.rect.y + self.dy - 5, self.image.get_width() + 10, self.image.get_height() + 10):
+            if exit.rect.colliderect(self.rect.x + self.dx - 40, self.rect.y + self.dy - 40, self.image.get_width() + 80, self.image.get_height() + 80):
                 #on vérifie si le joueur à le niveau de pass requis
                 if exit.breakable == False and exit.open == False and self.room_badge >= int(exit.value):
                     screen.blit(pygame.transform.scale(pygame.image.load("images/tell.png"), (300, 40)), (940, 40))
@@ -111,7 +112,7 @@ class Player:
         else:
             for item in self.items:
                 if item.value == "hammer":
-                    if exit.rect.colliderect(self.rect.x + self.dx - 5, self.rect.y + self.dy - 5, self.image.get_width() + 10, self.image.get_height() + 10):
+                    if exit.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 2, self.image.get_height() + 2):
                         if exit.breakable and exit.open == False:
                             screen.blit(pygame.transform.scale(pygame.image.load("images/tell.png"), (300, 40)), (940, 40))
                             if pygame.key.get_pressed()[pygame.K_e]:
@@ -167,7 +168,16 @@ class Player:
                                 if chest.item_cooldown == True:
                                     chest.contenu.chest_open = True
                                     chest.item_took = True
-
+                            else:
+                                chest.item_took = True
+                            self.chest_counter = 0
+                        else:
+                            if self.chest_counter >= 50:
+                                if chest.watched_cooldown:
+                                    chest.watched = True
+                                    self.chest_counter = 0
+                                    chest.watched_cooldown = False
+        self.chest_counter += 1
         if chest.room == self.room_num:
             self.collisions(chest.rect)
 

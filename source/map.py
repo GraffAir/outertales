@@ -12,6 +12,7 @@ class Map:
         #charger les images des blocs
         mur_img = pygame.transform.scale(pygame.image.load("images/map/mur.png"), (tile_size, tile_size))
         coin_img = pygame.transform.scale(pygame.image.load("images/map/coin.png"), (tile_size, tile_size))
+        bush_img = pygame.transform.scale(pygame.image.load("images/map/bush.png"), (tile_size, tile_size))
         #glass_img = pygame.transform.scale(pygame.image.load("images/map/glass_wall.png"), (tile_size, tile_size))
 
         #pour modifier les valeurs, les sorties, les itemms
@@ -49,7 +50,7 @@ class Map:
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
                 elif tile == 2:
-                    #img = glass_img
+                    img = bush_img
                     img_rect = img.get_rect()
                     img_rect.x, img_rect.y = col_count * tile_size, row_count * tile_size
                     tile = (img, img_rect)
@@ -110,16 +111,15 @@ class Map:
                 elif isinstance(tile, tuple):
                     #les coffres
                     if tile[0] == "C":
-                        chest = Chest(col_count * tile_size, row_count * tile_size, tile[1], tile[2], room_num, tile[3])
+                        chest = Chest(col_count * tile_size, row_count * tile_size, tile[1], tile[2], room_num, tile[3], tile[4])
                         #créer une liste contenants les coordonnées et la salle de chaque objet DEJA RAMASSE
                         for ch in chests_open:
                             #ajouter les items ramassé qui ne sont pas dans la liste 
-                            if [ch.rect.x, ch.rect.y, ch.room] not in chests_ver:
-                                chests_ver.append([ch.rect.x, ch.rect.y, ch.room])
+                            chests_ver.append([ch.rect.x, ch.rect.y, ch.room])
                             if [chest.rect.x, chest.rect.y, chest.room] == chests_ver[len(chests_ver)-1]:
                                 #ajoute 1 au compteur si l'item à déja été pris
                                 chest_already = True
-                                if chest_already == True and ch.item_took == False and ch.contenu != "":
+                                if ch.item_took == False and ch.contenu != "":
                                     #ch.contenu = Item(col_count * tile_size, row_count * tile_size, tile[2], room_num)
                                     self.items_map.append(ch.contenu)
                         #pour chaque item sur le sol, il vérifie s'il en existe deja un semblable dans l'inventaire (avec les coordonnées et le numéro de salle : il ne peut y en avoir qu'un qui y correspond, à savoir le même, qui serait deja ramassé)
@@ -305,7 +305,7 @@ class Sign:
         return sign, game
 
 class Chest:
-    def __init__(self, x, y, chest, contenu, room_num, locked):
+    def __init__(self, x, y, chest, contenu, room_num, locked, ref):
         """définir quel coffre, son contenu, sa position..."""
         self.image_chest = pygame.transform.scale(pygame.image.load(f"images/{chest}.png"), (40, 40))
         self.image_chest_open = pygame.transform.scale(pygame.image.load(f"images/{chest}_open.png"), (40, 40))
@@ -327,6 +327,9 @@ class Chest:
             self.code = locked
         else:
             self.locked = False
+        self.watched = False
+        self.ref = ref
+        self.watched_cooldown = 0
 
     def draw(self, screen):
         """dessiner le coffre"""
@@ -348,6 +351,7 @@ class Chest:
                 self.draw(screen)
             if pygame.key.get_pressed()[pygame.K_e] == False:
                 self.item_cooldown = True
+                self.watched_cooldown = True
         else:
             self.draw(screen)
         return game, lock
@@ -355,6 +359,8 @@ class Chest:
 class Props:
     def __init__(self, x, y, image):
         self.image = pygame.image.load(f"images/props/{image}.png")
+        if image == "bed":
+            self.image = pygame.transform.scale(self.image, (80, 120))
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = x, y
     
