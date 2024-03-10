@@ -7,6 +7,7 @@ import map
 import player
 import rooms
 import interface
+import sound
 
 #initialiser pygame
 pygame.init()
@@ -76,6 +77,9 @@ while run:
 
     #si le jeu est en cours
     if game:
+        #test dialogues
+        if pygame.key.get_pressed()[pygame.K_p]:
+            sound.dialogues(["je ne pense pas qu'il soit nécessaire de faire cela", "personnelement je pense que si", "mais vous êtes fou ma parole"] , screen)
         #afficher le menu si le joueur appuie sur ECHAP
         if pygame.key.get_pressed()[pygame.K_ESCAPE]:
             game, menu = False, True
@@ -237,7 +241,8 @@ while run:
             try_ = ""
             for ch in chests:
                 ch.try_open = False
-        
+
+
     #permet de  quitter le jeu
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
