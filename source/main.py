@@ -26,7 +26,7 @@ room_x, room_y = 0, 0
 #les portes de sorties à considérer en collisions, les items au sol et ceux de l'inventaire, les coffres ouverts et fermés.
 exits, items_map, items, signs, chests, chests_open, props = [], [], [], [], [], [], []
 #le niveau de pass pour passer les portes
-room_badge = 1
+room_badge = 0
 #la salle actuelle et son numéro d'identification
 room = []
 room_num = 1
