@@ -7,6 +7,7 @@ import map
 import player
 import rooms
 import interface
+import sound
 
 #initialiser pygame
 pygame.init()
@@ -80,6 +81,8 @@ while run:
     #si le jeu est en cours
     if game:
         #afficher le menu si le joueur appuie sur ECHAP
+        if pygame.key.get_pressed()[pygame.K_p]:
+            sound.dialogues(["On peut faire des tests", "on passe au suivant", "ca marche"], screen)
         if pygame.key.get_pressed()[pygame.K_ESCAPE]:
             game, menu = False, True
         #changer de map si nécessaire
