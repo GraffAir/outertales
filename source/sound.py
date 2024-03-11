@@ -8,7 +8,6 @@ def subTitles(texte, police, couleur, x, y, gras , italic , screen):
     text_font = pygame.font.SysFont(police, 30, bold = gras, italic = italic)
     img = text_font.render(texte, True, couleur)
     screen.blit(img, (x,y))
-    pygame.display.update() # Update the display after rendering the text
 
 
 
@@ -24,7 +23,7 @@ def dialogues(liste_textes, screen):
         screen.blit(rect, (0, 0))  # Blit the rectangle onto the screen at position (0, 0)
         
         subTitles(liste_textes[i], 'Arial', (0,0,0), 0, 0, False, True, screen)
-        
+        pygame.display.update()  # Update the display after rendering the text
         
         while True:
             for event in pygame.event.get():

@@ -9,13 +9,13 @@ class Player:
 
         #pour chaque liste, on a une série d'images, et on va faire en sorte que l'image du joueur varie d'une image à l'autre pour simuler un GIF
         for number in range(1, 4):
-            img_right = pygame.transform.scale(pygame.image.load(f"images/player/right{number}.png"), (40, 40))
+            img_right = pygame.transform.scale(pygame.image.load(f"images/player/right{number}.png"), (40, 40)).convert_alpha()
             self.images_walk_right.append(img_right)
-            img_left = pygame.transform.scale(pygame.image.load(f"images/player/left{number}.png"), (40, 40))
+            img_left = pygame.transform.scale(pygame.image.load(f"images/player/left{number}.png"), (40, 40)).convert_alpha()
             self.images_walk_left.append(img_left)
-            img_up = pygame.transform.scale(pygame.image.load(f"images/player/up{number}.png"), (40, 40))
+            img_up = pygame.transform.scale(pygame.image.load(f"images/player/up{number}.png"), (40, 40)).convert_alpha()
             self.images_walk_up.append(img_up)
-            img_down = pygame.transform.scale(pygame.image.load(f"images/player/down{number}.png"), (40, 40))
+            img_down = pygame.transform.scale(pygame.image.load(f"images/player/down{number}.png"), (40, 40)).convert_alpha()
             self.images_walk_down.append(img_down)
         #on définir l'image de départ
         self.image = self.images_walk_right[0]
@@ -102,7 +102,7 @@ class Player:
             if exit.rect.colliderect(self.rect.x + self.dx - 40, self.rect.y + self.dy - 40, self.image.get_width() + 80, self.image.get_height() + 80):
                 #on vérifie si le joueur à le niveau de pass requis
                 if exit.breakable == False and exit.open == False and self.room_badge >= int(exit.value):
-                    screen.blit(pygame.transform.scale(pygame.image.load("images/tell.png"), (300, 40)), (940, 40))
+                    screen.blit(pygame.transform.scale(pygame.image.load("images/tell.png"), (300, 40)).convert_alpha(), (940, 40))
                 if self.room_badge >= int(exit.value) and pygame.key.get_pressed()[pygame.K_e]:
                     #en fonction de ou mène la porte, on attribue des coordonnées au joueur qui sont différentes
                     exit.open = True
@@ -114,7 +114,7 @@ class Player:
                 if item.value == "hammer":
                     if exit.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 2, self.image.get_height() + 2):
                         if exit.breakable and exit.open == False:
-                            screen.blit(pygame.transform.scale(pygame.image.load("images/tell.png"), (300, 40)), (940, 40))
+                            screen.blit(pygame.transform.scale(pygame.image.load("images/tell.png"), (300, 40)).convert_alpha(), (940, 40))
                             if pygame.key.get_pressed()[pygame.K_e]:
                                 exit.open = True
                                 exit.rect.x, exit.rect.y = exit.end_pos
@@ -277,8 +277,11 @@ class Player:
         #déplacer le joueur et le dessiner
         self.rect.x += self.dx
         self.rect.y += self.dy
-        screen.blit(self.image, self.rect)
+        self.draw(screen)
 
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+        
     def replace(self):
         """on change les variables qui ont été modifiés"""
         return self.exits, self.items_map, self.items, self.chests, self.chests_open, self.room_badge, self.room_x, self.room_y

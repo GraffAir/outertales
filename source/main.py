@@ -44,10 +44,12 @@ chest_ver = False
 #charger les images
 
 #celle du sol
-bg_img = pygame.image.load("images/map/floor.png")
+bg_img = pygame.image.load("images/map/floor.png").convert
 #celles du menu
-play_btn_img = pygame.image.load("images/menu/play_btn.jpg")
-menu_bg_img = pygame.transform.scale(pygame.image.load("images/menu/menu_bg.png"), (1280, 720))
+
+#le fond noir qui vient s'ajouter quand il n'y a pas d'électricité.
+black_img = pygame.transform.scale(pygame.image.load("images/map/black.png"), (1280, 720)).convert_alpha()
+black_img.fill((255, 255, 255, 175), special_flags=BLEND_RGBA_MULT)
 
 def draw_badge_level(x, y, num):
    """fonction pour afficher le niveau de badge que possède le joueur"""
@@ -71,7 +73,6 @@ exits, items_map, signs, chests, props = room_draw.replace()
 
 #on initialise le joueur
 player = player.Player(1000, 400)
-                       
 #lancer la boucle du jeu
 run = True
 while run:
@@ -129,7 +130,6 @@ while run:
 
         #afficher le sol
         screen.blit(bg_img, (0, 0))
-
         #dessine la map
         room_draw.draw(screen)
 
@@ -177,6 +177,10 @@ while run:
         #afficher le niveau de badge
         if room_badge > 0:
             draw_badge_level(1000, 500, room_badge)
+
+        if electricity == False:
+            screen.blit(black_img, (0, 0))
+
     
     #si le menu est ouvert
     elif menu:        
@@ -249,6 +253,9 @@ while run:
                     else:
                         try_ = ""
 
+        if electricity == False:
+            screen.blit(black_img, (0, 0))
+
         if pygame.key.get_pressed()[pygame.K_e]:
             game = True
             lock = False
@@ -277,14 +284,20 @@ while run:
             if ch.room == room_num and ch.watched == False:
                 ch.draw(screen)
 
+        player.draw(screen)
         for ch in chests_open:
             if ch.watched == True:
+                ch.draw(screen)
                 screen.blit(pygame.transform.scale(pygame.image.load(f"images/ref_chest/{ch.ref}.png"), (560, 560)), (360, 80))
                 if pygame.key.get_pressed()[pygame.K_e] or pygame.key.get_pressed()[pygame.K_UP] or pygame.key.get_pressed()[pygame.K_DOWN] or pygame.key.get_pressed()[pygame.K_LEFT] or pygame.key.get_pressed()[pygame.K_RIGHT]:
                     if chest_counter >= 50:
                         chest, game = False, True
                         chest_counter = 0
                         ch.watched = False
+
+        if electricity == False:
+            screen.blit(black_img, (0, 0))
+            
     #permet de  quitter le jeu
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
