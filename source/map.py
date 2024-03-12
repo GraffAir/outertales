@@ -10,9 +10,9 @@ class Map:
         item_already, chest_already = False, False
 
         #charger les images des blocs
-        mur_img = pygame.transform.scale(pygame.image.load("images/map/mur.png"), (tile_size, tile_size))
-        coin_img = pygame.transform.scale(pygame.image.load("images/map/coin.png"), (tile_size, tile_size))
-        bush_img = pygame.transform.scale(pygame.image.load("images/map/bush.png"), (tile_size, tile_size))
+        mur_img = pygame.transform.scale(pygame.image.load("images/map/mur.png"), (tile_size, tile_size)).convert()
+        coin_img = pygame.transform.scale(pygame.image.load("images/map/coin.png"), (tile_size, tile_size)).convert()
+        bush_img = pygame.transform.scale(pygame.image.load("images/map/bush.png"), (tile_size, tile_size)).convert()
         #glass_img = pygame.transform.scale(pygame.image.load("images/map/glass_wall.png"), (tile_size, tile_size))
 
         #pour modifier les valeurs, les sorties, les itemms
@@ -144,9 +144,9 @@ class Exit:
     def __init__(self, x, y, dir, val, link, breakable, open, electricity):
         """definir l'image de la porte, sa position, et ses variables"""
         if breakable == "B":
-            img = pygame.image.load("images/glass_door.png")
+            img = pygame.image.load("images/glass_door.png").convert_alpha()
         elif breakable == "U":
-            img = pygame.image.load("images/iron_door.png")
+            img = pygame.image.load("images/iron_door.png").convert()
         #on dessine la porte 
         if dir == 'bottom':
             self.image = img
@@ -256,10 +256,10 @@ class Item:
     def __init__(self, x, y, image1, room, chest=False):
         #l'image
         if image1[1:4] == "key":
-            img = pygame.transform.scale(pygame.image.load(f"images/items/level{image1[4]}.png"), (40, 25))
+            img = pygame.transform.scale(pygame.image.load(f"images/items/level{image1[4]}.png"), (40, 25)).convert_alpha()
             y += 7.5
         else:
-            img = pygame.transform.scale(pygame.image.load(f"images//items/{image1[1:]}.png"), (40, 40))
+            img = pygame.transform.scale(pygame.image.load(f"images//items/{image1[1:]}.png"), (40, 40)).convert_alpha()
         self.image = img
         #les coordonnées
         self.rect = self.image.get_rect()
@@ -307,8 +307,8 @@ class Sign:
 class Chest:
     def __init__(self, x, y, chest, contenu, room_num, locked, ref):
         """définir quel coffre, son contenu, sa position..."""
-        self.image_chest = pygame.transform.scale(pygame.image.load(f"images/{chest}.png"), (40, 40))
-        self.image_chest_open = pygame.transform.scale(pygame.image.load(f"images/{chest}_open.png"), (40, 40))
+        self.image_chest = pygame.transform.scale(pygame.image.load(f"images/{chest}.png"), (40, 40)).convert()
+        self.image_chest_open = pygame.transform.scale(pygame.image.load(f"images/{chest}_open.png"), (40, 40)).convert()
         self.rect = self.image_chest.get_rect()
         self.rect.x, self.rect.y = x, y
         if contenu != "":
@@ -358,9 +358,9 @@ class Chest:
     
 class Props:
     def __init__(self, x, y, image):
-        self.image = pygame.image.load(f"images/props/{image}.png")
+        self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
         if image == "bed":
-            self.image = pygame.transform.scale(self.image, (80, 120))
+            self.image = pygame.transform.scale(self.image, (80, 120)).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = x, y
     
