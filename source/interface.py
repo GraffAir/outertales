@@ -5,7 +5,6 @@ font_header1 = pygame.font.Font('fonts/ArchivoBlack-Regular.ttf', 70)
 font_header2 = pygame.font.SysFont('Courier New', 50)
 
 # on définit les images du menu
-play_btn_img = pygame.image.load("images/menu/play_btn.jpg")
 menu_bg_img = pygame.transform.scale(pygame.image.load("images/menu/menu_bg.png"), (1280, 720))
 
 # les textes

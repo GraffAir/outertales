@@ -1,9 +1,18 @@
 import pygame
+pygame.font.init()
+
+font_header = pygame.font.SysFont('Courier New', 16)
+def text(text):
+    return font_header.render(f"{text}", False, (255, 255, 255))
+
+electricity = False
+items_map, chests, chests_open, exits, signs, props, archives = [], [], [], [], [], [], []
 
 class Map:
     """classe pour pouvoir dessiner la salle"""
-    def __init__(self, liste, items, chests_open, room_num, tile_size, electricity):
+    def __init__(self, liste, items, room_num, tile_size):
         """créer une liste contient les images et les coordonnées à dessiner"""
+        global electricity, items_map, chests, chests_open, exits, signs, props, archives
         self.tile_list = []
 
         #pour les items au sol
@@ -16,7 +25,7 @@ class Map:
         #glass_img = pygame.transform.scale(pygame.image.load("images/map/glass_wall.png"), (tile_size, tile_size))
 
         #pour modifier les valeurs, les sorties, les itemms
-        self.exits, self.items_map, items_verifications, chests_ver, self.signs, self.chests, self.props = [], [], [], [], [], [], []
+        exits, items_map, items_verifications, chests_ver, signs, chests, props, archives = [], [], [], [], [], [], [], []
 
         #pour les portes de sorties
         exit_dir = 'left'
@@ -80,8 +89,8 @@ class Map:
                         link = 3
                     elif col_count == 31:
                         link = 4
-                    exit = Exit(col_count * tile_size + x_, row_count * tile_size + y_, exit_dir, tile[1], link, tile[2], tile[3], electricity)
-                    self.exits.append(exit)
+                    exit = Exit(col_count * tile_size + x_, row_count * tile_size + y_, exit_dir, tile[1], link, tile[2], tile[3])
+                    exits.append(exit)
                 #si elle commence par un O, c'est un objet ramassable
                 elif str(tile)[0] == "O":
                     item = Item(col_count * tile_size, row_count * tile_size, tile, room_num)
@@ -97,17 +106,20 @@ class Map:
                             item_already = True
                     #et s'il n'a pas été ramassé, alors on l'ajoute à la liste des objets au sol à dessiner, et à considérer ses collisions
                     if item_already == False:
-                        self.items_map.append(item)
+                        items_map.append(item)
                     item_already = False
                 #les panneaux
                 elif str(tile)[0] == "S":
                     sign_ = tile
                     x, y = col_count * tile_size, row_count * tile_size
                     sign = Sign(sign_, x, y)
-                    self.signs.append(sign)
+                    signs.append(sign)
                 elif str(tile)[0] == "P":
                     prop = Props(col_count * tile_size, row_count * tile_size, tile[1:])
-                    self.props.append(prop)
+                    props.append(prop)
+                elif str(tile)[0] == "A":
+                    archive = Archive(col_count * tile_size, row_count * tile_size, tile[1:])
+                    archives.append(archive)
                 elif isinstance(tile, tuple):
                     #les coffres
                     if tile[0] == "C":
@@ -121,18 +133,14 @@ class Map:
                                 chest_already = True
                                 if ch.item_took == False and ch.contenu != "":
                                     #ch.contenu = Item(col_count * tile_size, row_count * tile_size, tile[2], room_num)
-                                    self.items_map.append(ch.contenu)
+                                    items_map.append(ch.contenu)
                         #pour chaque item sur le sol, il vérifie s'il en existe deja un semblable dans l'inventaire (avec les coordonnées et le numéro de salle : il ne peut y en avoir qu'un qui y correspond, à savoir le même, qui serait deja ramassé)
                         #et s'il n'a pas été ramassé, alors on l'ajoute à la liste des objets au sol à dessiner, et à considérer ses collisions
                         if chest_already == False:
-                            self.chests.append(chest)
+                            chests.append(chest)
                         chest_already = False
                 col_count += 1
             row_count += 1
-    
-    def replace(self):
-        """une méthode pour pouvoir remplacer les variables"""
-        return self.exits, self.items_map, self.signs, self.chests, self.props
     
     def draw(self, screen):
         """méthode pour dessiner cette liste qui contient toutes les coordonnées et les images des blocs à placer"""
@@ -141,8 +149,9 @@ class Map:
 
 class Exit:
     """classe pour gérer les changements de salle"""
-    def __init__(self, x, y, dir, val, link, breakable, open, electricity):
+    def __init__(self, x, y, dir, val, link, breakable, open):
         """definir l'image de la porte, sa position, et ses variables"""
+        global electricity
         if breakable == "B":
             img = pygame.image.load("images/glass_door.png").convert_alpha()
         elif breakable == "U":
@@ -219,8 +228,9 @@ class Exit:
         self.counter, self.collisions_counter = 0, 0
         self.go_back, self.open = False, False
 
-    def update(self, player, screen, electricity):
+    def update(self, player, screen):
         """methode pour faire déplacer les portes, et les faire revenir à leurs positions"""
+        global electricity
         if electricity:
             self.dx, self.dy = 0, 0
 
@@ -341,10 +351,6 @@ class Chest:
 
     def update(self, screen, room_num, game):
         """changer l'image du coffre s'il est ouvert, l'afficher, et affiche l'item si le coffre est ouvert"""
-        lock = False
-        if self.try_open:
-            game = False
-            lock = True
         if self.open:
             self.image_chest = self.image_chest_open
             if self.room == room_num:
@@ -354,15 +360,40 @@ class Chest:
                 self.watched_cooldown = True
         else:
             self.draw(screen)
-        return game, lock
     
 class Props:
     def __init__(self, x, y, image):
         self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
         if image == "bed":
             self.image = pygame.transform.scale(self.image, (80, 120)).convert_alpha()
+            if y == 560:
+                self.image = pygame.transform.flip(self.image, False, True)
+        elif image == "biblio":
+            self.image = pygame.transform.scale(self.image, (40, 40)).convert_alpha()
+            if y == 640:
+                self.image = pygame.transform.flip(self.image, False, True)
+        elif image == "generator":
+            self.image = pygame.transform.scale(self.image, (400, 400)).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = x, y
     
     def draw(self, screen):
         screen.blit(self.image, self.rect)
+
+class Archive:
+    def __init__(self, x, y, ref):
+        self.image = pygame.transform.scale(pygame.image.load("images/archives/arch.png").convert(), (80, 40))
+        self.paper_image = pygame.transform.scale(pygame.image.load(f"images/archives/paperA000-099.png").convert(), (1000, 500))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.ref = ref
+        self.paper_watch = False
+        self.paper_watched_cooldown = True
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+        screen.blit(text(self.ref), (self.rect.x, self.rect.y + 10))
+
+    def draw_paper(self, screen):
+        screen.blit(self.paper_image, (140, 60))
