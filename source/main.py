@@ -1,8 +1,7 @@
 #importer les bibliothèques / modules
 import pygame
 from pygame.locals import*
-import pickle
-from os import path
+from pygame import mixer
 import map
 import player
 import rooms
@@ -11,6 +10,7 @@ import sound
 
 #initialiser pygame
 pygame.init()
+mixer.init()
 clock = pygame.time.Clock()
 fps = 60
 
@@ -40,6 +40,11 @@ bg_img = pygame.image.load("images/map/floor.png").convert()
 black_img = pygame.transform.scale(pygame.image.load("images/map/black.png"), (1280, 720)).convert_alpha()
 black_img.fill((255, 255, 255, 175), special_flags=BLEND_RGBA_MULT)
 
+
+pygame.mixer.music.load("sound.wav")
+pygame.mixer.music.set_volume(0.7)
+sound_counter = 451
+
 def draw_badge_level(x, y, num):
    """fonction pour afficher le niveau de badge que possède le joueur"""
    screen.blit(pygame.transform.scale(pygame.image.load(f"images/items/level{num}.png"), (220, 140)), (x, y))
@@ -49,14 +54,16 @@ room = rooms.Rooms[rooms.room_y][rooms.room_x]
 room_draw = map.Map(room, player.items, rooms.room_num, tile_size)
 
 #on initialise le joueur
-player_ = player.Player(1000, 400)
-
+player_ = player.Player(1000, 300)
 #lancer la boucle du jeu
 run = True
 while run:
     #régler la clock sur 60 fps
     clock.tick(fps)
-
+    sound_counter += 1
+    if sound_counter == 452:
+        pygame.mixer.music.play()
+        sound_counter = 0
     #si le jeu est en cours
     if game:
         #afficher le menu si le joueur appuie sur ECHAP, et les dialogues
@@ -80,11 +87,6 @@ while run:
                 row_count += 1
             #la dessiner maintenant
             room_draw = map.Map(room, player.items, rooms.room_num, tile_size)
-
-            #pour l'instant on active l'élextricité comme ca
-            if rooms.room_num == 15:
-                map.electricity = True
-
             #faire en sorte que la porte qu'on vient de passer reste ouverte
             for exit in map.exits:
                 if player_.rect.colliderect(exit.rect.x - 100, exit.rect.y - 100, 200, 200):
@@ -100,7 +102,7 @@ while run:
                     elif exit.link == 3:
                         room[8][0], room[9][0] = f"{room[8][0][:3]}O", f"{room[9][0][:3]}O"
                         rooms.Rooms[rooms.room_y][rooms.room_x-1][8][31], rooms.Rooms[rooms.room_y][rooms.room_x-1][9][31] = f"{rooms.Rooms[rooms.room_y][rooms.room_x-1][8][31][:3]}O", f"{rooms.Rooms[rooms.room_y][rooms.room_x-1][9][31][:3]}O"
-                    elif exit.link == 4:    
+                    elif exit.link == 4:
                         room[8][31], room[9][31] = f"{room[8][31][:3]}O", f"{room[9][31][:3]}O"
                         rooms.Rooms[rooms.room_y][rooms.room_x+1][8][0], rooms.Rooms[rooms.room_y][rooms.room_x+1][9][0] = f"{rooms.Rooms[rooms.room_y][rooms.room_x+1][8][0][:3]}O", f"{rooms.Rooms[rooms.room_y][rooms.room_x+1][9][0][:3]}O"
 
@@ -142,10 +144,13 @@ while run:
             archive.draw(screen)
             if pygame.key.get_pressed()[pygame.K_e] == False:
                 archive.paper_watched_cooldown = True
+        
+        if map.generator != None:
+            map.generator.draw(screen)
 
         #mettre à jour le joueur    
-        player_.update(screen, room_draw, map.items_map, map.exits, map.signs, map.chests, map.chests_open, room_badge, rooms.room_num, rooms.room_x, rooms.room_y, map.electricity, map.props, map.archives)
-        map.exits, map.items_map, map.chests, map.chests_open, map.archives, room_badge, rooms.room_x, rooms.room_y, open_lock_chest, watch_chest, watch_archives  = player_.replace()
+        player_.update(screen, room_draw, map.items_map, map.exits, map.signs, map.chests, map.chests_open, room_badge, rooms.room_num, rooms.room_x, rooms.room_y, map.electricity, map.props, map.archives, map.generator)
+        map.exits, map.items_map, map.chests, map.chests_open, map.archives, room_badge, rooms.room_x, rooms.room_y, open_lock_chest, watch_chest, watch_archives, map.electricity  = player_.replace()
 
         #si on tente d'ouvrir un coffre vérouillé
         if open_lock_chest:
@@ -320,7 +325,7 @@ while run:
             archive.draw(screen)
 
         for chest in map.chests_open:
-            if chest.room == map.room_num:
+            if chest.room == rooms.room_num:
                 chest.draw(screen)
                 if chest.contenu != "" and chest.item_took == False:
                     chest.contenu.draw(screen)

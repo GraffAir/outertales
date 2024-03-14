@@ -2,17 +2,19 @@ import pygame
 pygame.font.init()
 
 font_header = pygame.font.SysFont('Courier New', 16)
+
 def text(text):
     return font_header.render(f"{text}", False, (255, 255, 255))
 
 electricity = False
 items_map, chests, chests_open, exits, signs, props, archives = [], [], [], [], [], [], []
+generator = None
 
 class Map:
     """classe pour pouvoir dessiner la salle"""
     def __init__(self, liste, items, room_num, tile_size):
         """créer une liste contient les images et les coordonnées à dessiner"""
-        global electricity, items_map, chests, chests_open, exits, signs, props, archives
+        global electricity, items_map, chests, chests_open, exits, signs, props, archives, generator
         self.tile_list = []
 
         #pour les items au sol
@@ -25,7 +27,7 @@ class Map:
         #glass_img = pygame.transform.scale(pygame.image.load("images/map/glass_wall.png"), (tile_size, tile_size))
 
         #pour modifier les valeurs, les sorties, les itemms
-        exits, items_map, items_verifications, chests_ver, signs, chests, props, archives = [], [], [], [], [], [], [], []
+        exits, items_map, items_verifications, chests_ver, signs, chests, props, archives, generator = [], [], [], [], [], [], [], [], None
 
         #pour les portes de sorties
         exit_dir = 'left'
@@ -120,6 +122,8 @@ class Map:
                 elif str(tile)[0] == "A":
                     archive = Archive(col_count * tile_size, row_count * tile_size, tile[1:])
                     archives.append(archive)
+                elif str(tile)[0] == "G":
+                    generator = Generator(col_count * tile_size, row_count * tile_size)
                 elif isinstance(tile, tuple):
                     #les coffres
                     if tile[0] == "C":
@@ -317,7 +321,7 @@ class Sign:
 class Chest:
     def __init__(self, x, y, chest, contenu, room_num, locked, ref):
         """définir quel coffre, son contenu, sa position..."""
-        self.image_chest = pygame.transform.scale(pygame.image.load(f"images/{chest}.png"), (40, 40)).convert()
+        self.image_chest = pygame.transform.scale(pygame.image.load(f"images/{chest}.png"), (40, 40)).convert_alpha()
         self.image_chest_open = pygame.transform.scale(pygame.image.load(f"images/{chest}_open.png"), (40, 40)).convert()
         self.rect = self.image_chest.get_rect()
         self.rect.x, self.rect.y = x, y
@@ -366,14 +370,10 @@ class Props:
         self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
         if image == "bed":
             self.image = pygame.transform.scale(self.image, (80, 120)).convert_alpha()
-            if y == 560:
-                self.image = pygame.transform.flip(self.image, False, True)
         elif image == "biblio":
             self.image = pygame.transform.scale(self.image, (40, 40)).convert_alpha()
             if y == 640:
                 self.image = pygame.transform.flip(self.image, False, True)
-        elif image == "generator":
-            self.image = pygame.transform.scale(self.image, (400, 400)).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = x, y
     
@@ -397,3 +397,14 @@ class Archive:
 
     def draw_paper(self, screen):
         screen.blit(self.paper_image, (140, 60))
+
+class Generator:
+    def __init__(self, x, y):
+        self.image = pygame.transform.scale(pygame.image.load("images/map/generator.png"), (360, 360)).convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.actionned = False
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
