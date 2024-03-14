@@ -323,14 +323,45 @@ class Player:
         self.dx, self.dy = 0, 0
         #on vérifie s'il appuie sur les touches de déplacements, et si oui on fait le deplaceement en question, et on change l'animation
         key = pygame.key.get_pressed()
-        if key[pygame.K_UP]:
-            self.move_up()
-        if key[pygame.K_LEFT]:
-            self.move_left()
-        if key[pygame.K_DOWN]:
-            self.move_down()
-        if key[pygame.K_RIGHT]:
+        if key[pygame.K_RIGHT] and key[pygame.K_UP]:
+            self.speed = 3
             self.move_right()
+            self.move_up()
+            self.speed = 4
+        elif key[pygame.K_RIGHT] and key[pygame.K_DOWN]:
+            self.speed = 3
+            self.move_right()
+            self.move_down()
+            self.speed = 4
+        elif key[pygame.K_RIGHT] and key[pygame.K_LEFT]:
+            self.speed = 3
+            self.move_right()
+            self.move_left()
+            self.speed = 4
+        elif key[pygame.K_LEFT] and key[pygame.K_UP]:
+            self.speed = 3
+            self.move_left()
+            self.move_up()
+            self.speed = 4
+        elif key[pygame.K_LEFT] and key[pygame.K_DOWN]:
+            self.speed = 3
+            self.move_left()
+            self.move_down()
+            self.speed = 4
+        elif key[pygame.K_UP] and key[pygame.K_DOWN]:
+            self.speed = 3
+            self.move_up()
+            self.move_down()
+            self.speed = 4
+        elif key[pygame.K_UP]:
+            self.move_up()
+        elif key[pygame.K_LEFT]:
+            self.move_left()
+        elif key[pygame.K_DOWN]:
+            self.move_down()
+        elif key[pygame.K_RIGHT]:
+            self.move_right()
+
         #si le joueur ne se deplace pas, on laisse l'image en question
         if key[pygame.K_RIGHT] == False and key[pygame.K_LEFT] == False and key[pygame.K_UP] == False and key[pygame.K_DOWN] == False:
             self.index = 0
