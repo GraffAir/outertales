@@ -1,7 +1,7 @@
 import pygame
 pygame.font.init()
 
-font_header1 = pygame.font.Font('fonts/ArchivoBlack-Regular.ttf', 70)
+font_header1 = pygame.font.Font('fonts/LTSoul-Bold.otf', 70)
 font_header2 = pygame.font.SysFont('Courier New', 50)
 
 # on définit les images du menu
@@ -40,14 +40,14 @@ class Button:
         return action
 
 # on définit les bouttons
-play_btn = Button(100, 150, textbutton_play, (30 * 6, 25 * 2))
-settings_btn = Button(100, 150 + 30 *2, textbutton_settings, (30 * 10, 25 * 2))
-leave_btn = Button(100, 150 + 30*4, textbutton_leave, (30 * 8, 25 * 2))
+play_btn = Button(1280/2-(30*6)/2-30, 300, textbutton_play, (30 * 6, 30 * 2))
+settings_btn = Button(100, 300 + 30 *2, textbutton_settings, (30 * 10, 30 * 2))
+leave_btn = Button(100, 300 + 30*4, textbutton_leave, (30 * 8, 30 * 2))
 
 def draw_menu(screen):
     """fonction qui sera appellé à chaque boucle du jeu où le menu est allumé"""
     screen.blit(menu_bg_img, (0, 0))
-    screen.blit(text_title, (1280/3, 100))
+    screen.blit(text_title, (490, 100))
     settings_btn.draw(screen)
     leave_btn.draw(screen)
     return play_btn.draw(screen)
