@@ -16,10 +16,6 @@ textbutton_play = font_header2.render("Jouer", False, (255, 255, 255))
 textbutton_settings = font_header2.render("Paramètres", False, (255, 255, 255))
 textbutton_leave = font_header2.render("Quitter", False, (255, 255, 255))
 
-#play_btn = Button(1280/2-(30*6)/2-30, 300, textbutton_play, (30 * 6, 30 * 2))
-#settings_btn = Button(100, 300, textbutton_settings, (30 * 10, 30 * 2))
-#leave_btn = Button(100, 300, textbutton_leave, (30 * 8, 30 * 2))
-
 class Button:
     def __init__(self, relative_pos, img, size):
         relx, rely = relative_pos
@@ -30,10 +26,12 @@ class Button:
         absy = SCREEN_HEIGHT * rely - height/2
 
         self.image = pygame.transform.scale(img, size)
+        self.hoverimage = pygame.transform.scale(img, (size[0]*1.2, size[1]*1.2))
         self.rect = self.image.get_rect()
         self.rect.x = absx
         self.rect.y = absy
         self.clicked = False
+        self.hover = False
 
     def draw(self, screen):
         action = False
@@ -45,19 +43,27 @@ class Button:
             if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
                 action = True
                 self.clicked = True
+            else:
+                self.hover = True
+        else:
+            self.hover = False
 
         if pygame.mouse.get_pressed()[0] == 0:
             self.clicked = False
 
-        screen.blit(self.image, self.rect)
-
+        if self.hover == True:
+            screen.blit(self.hoverimage, self.rect)
+        else:
+            screen.blit(self.image, self.rect)
+        
         return action
+
 
 # on définit les bouttons
     
 play_btn = Button((0.5, 0.5), textbutton_play, (30 * 6, 30 * 2))
-settings_btn = Button((0.25, 0.5), textbutton_settings, (30 * 10, 30 * 2))
-leave_btn = Button((0.75, 0.5), textbutton_leave, (30 * 8, 30 * 2))
+settings_btn = Button((0.25, 0.5), textbutton_settings, (30 * 5, 30))
+leave_btn = Button((0.75, 0.5), textbutton_leave, (30 * 4, 30))
 
 
 
