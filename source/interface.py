@@ -1,11 +1,14 @@
 import pygame
 pygame.font.init()
 
+
+SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 720
+
 font_header1 = pygame.font.Font('fonts/LTSoul-Bold.otf', 70)
 font_header2 = pygame.font.SysFont('Courier New', 50)
 
 # on définit les images du menu
-menu_bg_img = pygame.transform.scale(pygame.image.load("images/menu/menu_bg.png"), (1280, 720))
+menu_bg_img = pygame.transform.scale(pygame.image.load("images/menu/menu_bg.png"), (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # les textes
 text_title = font_header1.render("Outertale", False, (255, 255, 255))
@@ -13,12 +16,23 @@ textbutton_play = font_header2.render("Jouer", False, (255, 255, 255))
 textbutton_settings = font_header2.render("Paramètres", False, (255, 255, 255))
 textbutton_leave = font_header2.render("Quitter", False, (255, 255, 255))
 
+#play_btn = Button(1280/2-(30*6)/2-30, 300, textbutton_play, (30 * 6, 30 * 2))
+#settings_btn = Button(100, 300, textbutton_settings, (30 * 10, 30 * 2))
+#leave_btn = Button(100, 300, textbutton_leave, (30 * 8, 30 * 2))
+
 class Button:
-    def __init__(self, x, y, img, size):
+    def __init__(self, relative_pos, img, size):
+        relx, rely = relative_pos
+        width, height = size
+        #1280*relx - width/2
+
+        absx = SCREEN_WIDTH * relx - width/2
+        absy = SCREEN_HEIGHT * rely - height/2
+
         self.image = pygame.transform.scale(img, size)
         self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
+        self.rect.x = absx
+        self.rect.y = absy
         self.clicked = False
 
     def draw(self, screen):
@@ -40,9 +54,12 @@ class Button:
         return action
 
 # on définit les bouttons
-play_btn = Button(1280/2-(30*6)/2-30, 300, textbutton_play, (30 * 6, 30 * 2))
-settings_btn = Button(100, 300 + 30 *2, textbutton_settings, (30 * 10, 30 * 2))
-leave_btn = Button(100, 300 + 30*4, textbutton_leave, (30 * 8, 30 * 2))
+    
+play_btn = Button((0.5, 0.5), textbutton_play, (30 * 6, 30 * 2))
+settings_btn = Button((0.25, 0.5), textbutton_settings, (30 * 10, 30 * 2))
+leave_btn = Button((0.75, 0.5), textbutton_leave, (30 * 8, 30 * 2))
+
+
 
 def draw_menu(screen):
     """fonction qui sera appellé à chaque boucle du jeu où le menu est allumé"""
