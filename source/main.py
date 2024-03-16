@@ -19,6 +19,8 @@ screen = pygame.display.set_mode((1280, 720))
 pygame.display.set_caption("Outer Tales")
 tile_size = 40
 
+interface_menu = interface.Menu(screen)
+
 #les variables
 #le niveau de pass pour passer les portes
 room_badge = 0
@@ -174,7 +176,7 @@ while run:
     #si le menu est ouvert
     elif menu:
         #dessiner le menu        
-        if interface.draw_menu(screen):
+        if interface_menu.draw():
             menu, game = False, True
 
     #si un panneau est affiché à l'écran
