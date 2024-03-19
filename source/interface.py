@@ -23,6 +23,7 @@ textbutton_play = font_header2.render("Jouer", True, ACCENT_COLOR)
 textbutton_settings = font_header2.render("Paramètres", True, ACCENT_COLOR)
 textbutton_leave = font_header2.render("Quitter", True, ACCENT_COLOR)
 
+
 # les textes du menu paramètres
 textbutton_audio = font_button.render("Audio", True, ACCENT_COLOR)
 textbutton_controles = font_button.render("Contrôles", True, ACCENT_COLOR)
@@ -57,40 +58,37 @@ def get_absolute(position, size, anchorpoint=(0, 0)):
     return (absx, absy), (width, height)
 
 class Button:
-    """
-    Classe ne représentant que le squelette d'un bouton : l'interactivité et la surface (texte ou image) intérieure
-    Elle n'est *pas* destinée à être utilisée directement, mais à être héritée dans d'autres classes de boutons.
-    """
-    def __init__(self, screen, position, size, surface, hoversurface=None):
-        self.screen = screen
-        self.surface = surface
-        # self.hoversurface = pygame.transform.scale(surface, (size[0]*1.2, size[1]*1.2))
-        self.hoversurface = hoversurface
-        self.rect = self.surface.get_rect()
-        self.rect.x, self.rect.y = position
-        self.interaction = 0 # 0 = None / 1 = Hover / 2 = Click
+    def __init__(self, pos, img, rel_size, anchorpoint=(0,0)):
 
-    def update(self):
-        clicked = False
+        abs_pos, size = get_absolute(pos, rel_size, anchorpoint)
+        absx, absy = abs_pos
+
+        self.image = pygame.transform.scale(img, size)
+        self.hoverimage = pygame.transform.scale(img, (size[0]*1.2, size[1]*1.2))
+        self.rect = self.image.get_rect()
+        self.rect.x = absx
+        self.rect.y = absy
+        self.clicked = False
+        self.hover = False
+
+    def draw(self, screen):
+        action = False
 
         #avoir la position de la souris
         pos = pygame.mouse.get_pos()
 
         if self.rect.collidepoint(pos):
-            if pygame.mouse.get_pressed()[0] == 1:
-                clicked = self.interaction != 2
-                self.interaction = 2
-            elif pygame.mouse.get_pressed()[0] == 0:
-                self.interaction = 1
+            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+                action = True
+                self.clicked = True
+            else:
+                self.hover = True
         else:
             self.interaction = 0
         return clicked
 
-    def draw(self):
-        if self.interaction == 1 and self.hoversurface != None:
-            self.screen.blit(self.hoversurface, self.rect)
-        else:
-            self.screen.blit(self.surface, self.rect)       
+        if pygame.mouse.get_pressed()[0] == 0:
+            self.clicked = False
 
 class RectButton(Button):
     """Classe héritée du Button permettant de créer un bouton aux bordures rectangulaires"""
@@ -172,12 +170,21 @@ class SliderButton:
             
             button[0].draw()
         
+        return action
+
+
+# on définit les bouttons
+    
+play_btn = Button((0.4, 0.5), textbutton_play, (0.15, 0.07), (0, 1))
+settings_btn = Button((0.18, 0.5), textbutton_settings, (0.13, 0.05), (0, 1))
+leave_btn = Button((0.65, 0.5), textbutton_leave, (0.12, 0.05), (0, 1))
+    
+
 
 class Menu:
-    def __init__(self, s):
+    def __init__(self, screen):
         self.current_window = "menu" # menu / settings / pause
-        self.settings_tab = "audio" # audio / controls
-        self.screen = s
+        self.screen = screen
         black_img = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         self.black_img = black_img.convert_alpha()
         self.counter = 0
@@ -223,7 +230,7 @@ class Menu:
             if self.buttons['main']['settings'].update():
                 self.current_window = "settings"
 
-            if self.buttons['main']['quit'].update():
+            if leave_btn.draw(self.screen):
                 pygame.quit()
                 return
 
@@ -253,7 +260,6 @@ class Menu:
 
                 audio_music.draw()
                 audio_sfx.draw()
-
             if self.buttons['settings']['tab_audio'].update():
                 self.settings_tab = 'audio'
                 

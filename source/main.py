@@ -20,7 +20,6 @@ pygame.display.set_caption("Outer Tales")
 tile_size = 40
 
 interface_menu = interface.Menu(screen)
-
 #les variables
 #le niveau de pass pour passer les portes
 room_badge = 0
@@ -33,7 +32,18 @@ lock_counter = 0
 archives_counter = 0
 #pour entrer des mots de passe de coffre
 try_ = ""
+start_speak = False
+door_speak = False
+good_counter, pass_counter = 0, 0
+vals = [_ for _ in range(0, 10)]
+end_speak = False
+end_speak_already = False
+dialogue = 0
+end1 = False
 
+font_header = pygame.font.SysFont('Comic Sans MS', 35, bold=True)
+def text(text, col=(255, 255, 255)):
+    return font_header.render(f"{text}", False, col)
 #charger les images
 
 #celle du sol
@@ -41,7 +51,12 @@ bg_img = pygame.image.load("images/map/floor.png").convert()
 #le fond noir qui vient s'ajouter quand il n'y a pas d'électricité.
 black_img = pygame.transform.scale(pygame.image.load("images/map/black.png"), (1280, 720)).convert_alpha()
 black_img.fill((255, 255, 255, 175), special_flags=BLEND_RGBA_MULT)
-
+password_img = pygame.transform.scale(pygame.image.load("images/password.png"), (1000, 500))
+password_img1 = pygame.transform.scale(pygame.image.load("images/password_1.png"), (1000, 500))
+password_img2 = pygame.transform.scale(pygame.image.load("images/password_2.png"), (1000, 500))
+password_img3 = pygame.transform.scale(pygame.image.load("images/password_3.png"), (1000, 500))
+password_img4 = pygame.transform.scale(pygame.image.load("images/password_4.png"), (1000, 500))
+password_img_g = pygame.transform.scale(pygame.image.load("images/password_good.png"), (1000, 500))
 
 pygame.mixer.music.load("sound.wav")
 pygame.mixer.music.set_volume(0.7)
@@ -57,6 +72,7 @@ room_draw = map.Map(room, player.items, rooms.room_num, tile_size)
 
 #on initialise le joueur
 player_ = player.Player(1000, 300)
+
 #lancer la boucle du jeu
 run = True
 while run:
@@ -64,13 +80,11 @@ while run:
     clock.tick(fps)
     sound_counter += 1
     if sound_counter == 452:
-        pygame.mixer.music.play()
-        sound_counter = 0
+        #pygame.mixer.music.play()
+        sound_counter = 0   
     #si le jeu est en cours
     if game:
         #afficher le menu si le joueur appuie sur ECHAP, et les dialogues
-        if pygame.key.get_pressed()[pygame.K_p]:
-            sound.dialogues(["On peut faire des tests", "on passe au suivant", "ca marche"], screen)
         if pygame.key.get_pressed()[pygame.K_ESCAPE]:
             game, menu = False, True
         #changer de map si le joueur change de salle
@@ -89,6 +103,11 @@ while run:
                 row_count += 1
             #la dessiner maintenant
             room_draw = map.Map(room, player.items, rooms.room_num, tile_size)
+            if rooms.room_num == 14:
+                if end_speak == False:
+                    if end_speak_already == False:
+                        end_speak = True
+
             #faire en sorte que la porte qu'on vient de passer reste ouverte
             for exit in map.exits:
                 if player_.rect.colliderect(exit.rect.x - 100, exit.rect.y - 100, 200, 200):
@@ -150,9 +169,11 @@ while run:
         if map.generator != None:
             map.generator.draw(screen)
 
+        if map.ship != None:
+            map.ship.draw(screen)
         #mettre à jour le joueur    
-        player_.update(screen, room_draw, map.items_map, map.exits, map.signs, map.chests, map.chests_open, room_badge, rooms.room_num, rooms.room_x, rooms.room_y, map.electricity, map.props, map.archives, map.generator)
-        map.exits, map.items_map, map.chests, map.chests_open, map.archives, room_badge, rooms.room_x, rooms.room_y, open_lock_chest, watch_chest, watch_archives, map.electricity  = player_.replace()
+        player_.update(screen, room_draw, map.items_map, map.exits, map.signs, map.chests, map.chests_open, room_badge, rooms.room_num, rooms.room_x, rooms.room_y, map.electricity, map.props, map.archives, map.generator, map.ship, end_speak_already)
+        map.exits, map.items_map, map.chests, map.chests_open, map.archives, room_badge, rooms.room_x, rooms.room_y, open_lock_chest, watch_chest, watch_archives, map.electricity, door_speak, end1  = player_.replace()
 
         #si on tente d'ouvrir un coffre vérouillé
         if open_lock_chest:
@@ -165,6 +186,8 @@ while run:
         if watch_archives:
             game = False
             
+        if end1:
+            game = False
         #afficher le niveau de badge
         if room_badge > 0:
             draw_badge_level(1000, 500, room_badge)
@@ -172,6 +195,20 @@ while run:
         #asssombrir l'écran s'il n'y a pas d'electricité
         if map.electricity == False:
             screen.blit(black_img, (0, 0))
+
+        if start_speak == False:
+            sound.dialogues(["-Que se passe t-il ?", "-Pourquoi suis-je dans ce vaisseau abandonné ? ", "-Je ne me souviens de rien...", "En plus la lumière à l'air éteinte..."], screen)
+            start_speak = True
+        
+        if door_speak == True:
+            sound.dialogues(["La porte ne veut pas s'ouvrir, l'electricité à l'air coupée", "Il n'y aurait pas quelque chose pour forcer la porte ?"], screen)
+            door_speak = False
+
+        if end_speak == True:
+            sound.dialogues(["-Ne bouge pas !", "-Qui etes vous", "Tu est la pour terminer le travail, cest ca ?", "mais de quoi parlez vous", "Tu ne te souviens pas ? C'est toi qui a tué tout le monde, allez vas y prend ma vie si tu n'a donc pas de coeur"], screen)
+            end_speak = False
+            end_speak_already = True
+
 
     #si le menu est ouvert
     elif menu:
@@ -216,43 +253,49 @@ while run:
 
     #si le joueur ouvre un coffre verouillé
     elif open_lock_chest:
-        lock_counter += 1
+        if lock_counter <= 14:
+            lock_counter += 1
         screen.blit(bg_img, (0, 0))
-        screen.blit(pygame.image.load("images/password.png"), (140, 110))
-        #les valeurs pouvant être rentrés
-        vals = [_ for _ in range(0, 10)]
-        #si le joueur appuie sur un chiffre, il l'ajoute à l'essai.
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
+                print(event.dict)
+                if event.dict["unicode"] == "\x08":
+                    try_ = try_[0:(len(try_)-1)]
                 try:
                     if int(event.dict['unicode']) in vals:
                         try_ = try_ + str(event.dict['unicode'])
                 except:
                     pass
         #s'il a commencé a tapper un mot de passe, alors afficher des asterisques
-        if len(try_) == 1:
-            screen.blit(pygame.image.load("images/aste.png"), (250, 350))
-        if len(try_) == 2:
-            screen.blit(pygame.image.load("images/aste.png"), (250, 350))
-            screen.blit(pygame.image.load("images/aste.png"), (450, 350))
-        if len(try_) == 3:
-            screen.blit(pygame.image.load("images/aste.png"), (250, 350))
-            screen.blit(pygame.image.load("images/aste.png"), (450, 350))
-            screen.blit(pygame.image.load("images/aste.png"), (650, 350))
+        if try_ == "":
+            screen.blit(password_img, (140, 110))
+        elif len(try_) == 1:
+            screen.blit(password_img1, (140, 110))
+        elif len(try_) == 2:
+            screen.blit(password_img2, (140, 110))
+        elif len(try_) == 3:
+            screen.blit(password_img3, (140, 110))
+        elif len(try_) == 4:
+            screen.blit(password_img4, (140, 110))
+        
         #si le mot de passe est le bon, ouvrir le coffre et revenir au jeu
         if len(try_) == 4:
             for ch in map.chests:
                 if ch.try_open == True:
                     if try_ == ch.code:
-                        ch.try_open = False
-                        ch.locked = False
-                        ch.open = True
-                        map.chests.remove(ch)
-                        map.chests_open.append(ch)
-                        if ch.contenu != "":
-                            map.items_map.append(ch.contenu)
-                        game = True
-                        open_lock_chest = False
+                        screen.blit(password_img_g, (140, 110))
+                        pass_counter += 1
+                        if pass_counter == 15:
+                            ch.try_open = False
+                            ch.locked = False
+                            ch.open = True
+                            map.chests.remove(ch)
+                            map.chests_open.append(ch)
+                            if ch.contenu != "":
+                                map.items_map.append(ch.contenu)
+                            game = True
+                            open_lock_chest = False
+                            pass_counter = 0
                     else:
                         try_ = ""
 
@@ -260,7 +303,7 @@ while run:
             screen.blit(black_img, (0, 0))
 
         if pygame.key.get_pressed()[pygame.K_e]:
-            if lock_counter >= 15:
+            if lock_counter == 15:
                 game = True
                 open_lock_chest = False
                 try_ = ""
@@ -349,6 +392,17 @@ while run:
 
         if map.electricity == False:
             screen.blit(black_img, (0, 0))
+
+    elif end1:
+        pygame.draw.rect(screen, (0, 0 ,0), pygame.Rect(0, 0, 1280, 720))
+        if dialogue < 300:
+            dialogue += 1
+        if 0 < dialogue < 150:
+            screen.blit(text("Vous vous enfuyez avec le vaisseau"), (640 - text("Vous vous enfuyez avec le vaisseau").get_rect().width/2, 720*1/4 - text("Vous vous enfuyez avec le vaisseau").get_rect().height))
+        if  150 <= dialogue < 300:
+            screen.blit(text("Cependant vous mourrez de faim au bout de 48H"), (640 - text("Cependant vous mourrez de faim au bout de 48H").get_rect().width/2, 720*2/4 - text("Cependant vous mourrez de faim au bout de 48H").get_rect().height))
+        if dialogue == 300:
+            screen.blit(text("GAME OVER", (255, 0, 0)), (640 - text("GAME OVER").get_rect().width/2, 720*3/4 - text("GAME OVER").get_rect().height))
 
     #permet de  quitter le jeu
     for event in pygame.event.get():
