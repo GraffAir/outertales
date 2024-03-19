@@ -26,6 +26,8 @@ textbutton_leave = font_header2.render("Quitter", True, ACCENT_COLOR)
 # les textes du menu paramètres
 textbutton_audio = font_button.render("Audio", True, ACCENT_COLOR)
 textbutton_controles = font_button.render("Contrôles", True, ACCENT_COLOR)
+textbutton_back = font_button.render("Retour", True, ACCENT_COLOR)
+
 textbutton_audio_activated = font_button.render("Audio", True, BLACK_COLOR)
 textbutton_controles_activated = font_button.render("Contrôles", True, BLACK_COLOR)
 
@@ -114,8 +116,8 @@ class RectButton(Button):
 
 class TextButton(Button):
     """Classe héritée du Button représentant un simple bouton sous forme de texte"""
-    def __init__(self, screen, rel_pos, rel_size, surface):
-        abs_pos, abs_size = get_absolute(rel_pos, rel_size)
+    def __init__(self, screen, rel_pos, rel_size, surface, anchorpoint=(0,0)):
+        abs_pos, abs_size = get_absolute(rel_pos, rel_size, anchorpoint)
         super().__init__(screen, abs_pos, abs_size, surface)
 
 # Gestion du curseur
@@ -148,7 +150,7 @@ class SliderButton:
 
         self.buttons = [(self.sub_button, leftarrow, leftarrow_unactive)]
         for i in range(intermediary_steps):
-            button = Button(screen, (self.x + step_width * (i + 1) - 2*padding, self.y), (step_width-padding, self.height), pygame.transform.scale(bar, (step_width-padding, self.height)))
+            button = Button(screen, (self.x + step_width * (i + 1) - 2*padding, self.y), (step_width-padding, self.height), bar)
             self.buttons.append((button, bar, bar_unactive))
         self.buttons.append((self.add_button, rightarrow, rightarrow_unactive))
 
@@ -158,7 +160,7 @@ class SliderButton:
             if b[0].update():
                 self.step = self.buttons.index(b)
                 return True
-            return False
+        return False
 
     def draw(self):
         for i in range(len(self.buttons)):
@@ -187,12 +189,12 @@ class Menu:
                 'play': TextButton(s, (0.1, 0.25), (0.12, 0.05), textbutton_play),
                 'settings': TextButton(s, (0.1, 0.35), (0.12, 0.05), textbutton_settings),
                 'quit': TextButton(s, (0.1, 0.45), (0.12, 0.05), textbutton_leave),
-                'test_slider': SliderButton(s, (0.2, 0.4), (0.3, 0.05), 3, 5),
             },
             'settings': {
                 ## communs
                 'tab_controls': RectButton(s, (0.5, 0.2), (0.2, 0.1), [textbutton_controles, textbutton_controles_activated]),
                 'tab_audio': RectButton(s, (0.3, 0.2), (0.2, 0.1), [textbutton_audio, textbutton_audio_activated]),
+                'back': TextButton(s, (0.7, 0.2), (0.2, 0.1), textbutton_back, (0.5, 0.8)),
 
                 ## onglet : audio
                 'audio_music': SliderButton(s, (0.2, 0.4), (0.3, 0.05), 3, 5),
@@ -229,15 +231,16 @@ class Menu:
                 if v.interaction == 1:
                     self.screen.blit(blurs[k], (v.rect.x-20, v.rect.y-20))
                 v.draw()
-
-            self.buttons['main']['test_slider'].update()
-            self.buttons['main']['test_slider'].draw()
             
             return self.buttons['main']['play'].update(), self.volume
 
         elif self.current_window == "settings":
             self.screen.blit(menu_bg_img, (0, 0))
             self.screen.blit(settings_bg_img, (0, 0))
+            self.buttons['settings']['back'].draw()
+            
+            if self.buttons['settings']['back'].update():
+                self.current_window = 'menu'
 
             if self.settings_tab == 'audio':
                 audio_music = self.buttons['settings']['audio_music']
