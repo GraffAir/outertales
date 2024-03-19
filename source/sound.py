@@ -9,8 +9,6 @@ def subTitles(texte, police, couleur, x, y, gras , italic , screen):
     img = text_font.render(texte, True, couleur)
     screen.blit(img, (x,y))
 
-
-
 def dialogues(liste_textes, screen):
     """
     Affiche un dialogue, passes au texte suivant quand p est pressé, les textes viennent d'une liste rentrée en paramètre de la fonction.
@@ -21,7 +19,9 @@ def dialogues(liste_textes, screen):
         rect = pygame.Surface((1280, 100))  # Create a surface for the rectangle
         rect.fill((255, 255, 255))  # Fill the rectangle with the clear color
         screen.blit(rect, (0, 0))  # Blit the rectangle onto the screen at position (0, 0)
-        
+        text_font2 = pygame.font.SysFont('Arial', 23, bold = False, italic = True)
+        img2 = text_font2.render("Appuyer sur ESPACE pour continuer", True, (0, 0, 0))
+        screen.blit(img2, (1280-img2.get_rect().width, 100-img2.get_rect().height))
         subTitles(liste_textes[i], 'Arial', (0,0,0), 0, 0, False, True, screen)
         pygame.display.update()  # Update the display after rendering the text
         
