@@ -212,9 +212,12 @@ while run:
 
     #si le menu est ouvert
     elif menu:
-        #dessiner le menu        
-        if interface_menu.draw():
+        #dessiner le menu
+        start, volume = interface_menu.draw()  
+        pygame.mixer.music.set_volume(volume[0])      
+        if start:
             menu, game = False, True
+        
 
     #si un panneau est affiché à l'écran
     elif sign:
