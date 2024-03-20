@@ -274,6 +274,8 @@ class Player:
     def collisions_archives(self, archive):
         """les collisions avec les archives"""
         global items
+        if pygame.key.get_pressed()[pygame.K_e] == False:
+            self.archive_counter = True
         #s'il entre en collision avec l'archive
         if archive.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 4, self.image.get_height() + 4):
             #s'il appuie sur E
@@ -281,22 +283,18 @@ class Player:
                 #si le papier n'est pas en train d'être regardé
                 if archive.paper_watch == False:
                     #si cela fait suffisament de temps depuis qu'on a regardé la note d'une archive
-                    if self.archive_counter == 15:
+                    if self.archive_counter:
                         #si cest possible de regarder la note
-                        if archive.paper_watched_cooldown:
                             #alors on envoie dans la boucle principale que l'on regarde la note d'une archive
-                            archive.paper_watch = True
-                            self.archive = True
-                            self.archive_counter = 0
-                            archive.paper_watched_cooldown = False
+                        archive.paper_watch = True
+                        self.archive = True
+                        self.archive_counter = False
 
-        #incrémenter le compteur quand on regarde une archive
-        if self.archive_counter < 15:
-            self.archive_counter += 1
         #les collisions pour pas rentrer dedans
         self.collisions(archive.rect)
 
     def collisions_generator(self, generator, screen):
+        """les collisions avec le generateur"""
         if generator.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 4, self.image.get_height() + 4):
             if self.electricity == False:
                 if generator.actionned == False:
@@ -307,6 +305,7 @@ class Player:
         self.collisions(generator.rect)
 
     def collisions_ship(self, ship, screen):
+        """collisions avec le vaisseau"""
         if self.end_speak == True:
             if ship.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 4, self.image.get_height() + 4):
                 screen.blit(pygame.transform.scale(text("appuyer sur E pour aller dans le vaisseau"), (300, 40)).convert_alpha(), (940, 40))
@@ -314,6 +313,17 @@ class Player:
                     self.end = True
 
         self.collisions(ship.rect)
+
+    def collisions_chair(self, chair, screen):
+        """collisions avec la chaise a la fin"""
+        if self.end_speak == True:
+            if chair.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 4, self.image.get_height() + 4):
+                screen.blit(pygame.transform.scale(text("appuyer sur E pour rester sur la chaise"), (300, 40)).convert_alpha(), (940, 40))
+                if pygame.key.get_pressed()[pygame.K_e]:
+                    self.end2 = True
+
+        self.collisions(chair.rect)
+
     def use_items(self):
         "une fois un item dans l'inventaire, on peut l'utiliser (une clé par exemple augmente le niveau de pass pour les sorties)"
         global items
@@ -339,7 +349,7 @@ class Player:
             self.room_y -= 1
             self.rect.y = 720 - 40 * 2
 
-    def update(self, screen, room_draw, items_map, exits, signs, chests, chests_open, room_badge, room_num, room_x, room_y, electricity, props, archives, generator, ship, end_speak):
+    def update(self, screen, room_draw, items_map, exits, signs, chests, chests_open, room_badge, room_num, room_x, room_y, electricity, props, archives, generator, ship, end_speak, chair):
         """gérer tous les évènements"""
         global items
         #on crée un objet avec self pour pouvoir changer les variables avec la méthode replace et les utiliser dans les autres methodes
@@ -349,6 +359,7 @@ class Player:
         self.door_speak = False
         self.end_speak = end_speak
         self.end = False
+        self.end2 = False
         #les variables qui symbolise le déplacement qui sera réalisé si possible
         self.dx, self.dy = 0, 0
         #on vérifie s'il appuie sur les touches de déplacements, et si oui on fait le deplaceement en question, et on change l'animation
@@ -436,6 +447,9 @@ class Player:
 
         if ship != None:
             self.collisions_ship(ship, screen)
+
+        if chair != None:
+            self.collisions_chair(chair, screen)
         
         #on utilise les items
         self.use_items()
@@ -454,5 +468,5 @@ class Player:
         
     def replace(self):
         """on change les variables qui ont été modifiés"""
-        return self.exits, self.items_map, self.chests, self.chests_open, self.archives, self.room_badge, self.room_x, self.room_y, self.lock, self.chest, self.archive, self.electricity, self.door_speak, self.end
+        return self.exits, self.items_map, self.chests, self.chests_open, self.archives, self.room_badge, self.room_x, self.room_y, self.lock, self.chest, self.archive, self.electricity, self.door_speak, self.end, self.end2
         

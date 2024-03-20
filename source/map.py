@@ -10,12 +10,13 @@ electricity = False
 items_map, chests, chests_open, exits, signs, props, archives = [], [], [], [], [], [], []
 generator = None
 ship = None
+chair = None
 
 class Map:
     """classe pour pouvoir dessiner la salle"""
     def __init__(self, liste, items, room_num, tile_size):
         """créer une liste contient les images et les coordonnées à dessiner"""
-        global electricity, items_map, chests, chests_open, exits, signs, props, archives, generator, ship
+        global electricity, items_map, chests, chests_open, exits, signs, props, archives, generator, ship, chair
         self.tile_list = []
 
         #pour les items au sol
@@ -28,7 +29,7 @@ class Map:
         #glass_img = pygame.transform.scale(pygame.image.load("images/map/glass_wall.png"), (tile_size, tile_size))
 
         #pour modifier les valeurs, les sorties, les itemms
-        exits, items_map, items_verifications, chests_ver, signs, chests, props, archives, generator, ship = [], [], [], [], [], [], [], [], None, None
+        exits, items_map, items_verifications, chests_ver, signs, chests, props, archives, generator, ship, chair = [], [], [], [], [], [], [], [], None, None, None
 
         #pour les portes de sorties
         exit_dir = 'left'
@@ -146,6 +147,8 @@ class Map:
                         chest_already = False
                 elif str(tile)[0] == "B":
                     ship = Ship(col_count * tile_size, row_count * tile_size)
+                elif str(tile)[0] == "Z":
+                    chair = Chair(col_count * tile_size, row_count * tile_size)
                 col_count += 1
             row_count += 1
     
@@ -388,7 +391,11 @@ class Props:
 class Archive:
     def __init__(self, x, y, ref):
         self.image = pygame.transform.scale(pygame.image.load("images/archives/arch.png").convert(), (80, 40))
-        self.paper_image = pygame.transform.scale(pygame.image.load(f"images/archives/paperA000-099.png").convert(), (1000, 500))
+        self.paper_image = pygame.transform.scale(pygame.image.load(f"images/archives/found.png").convert(), (1000, 500))
+        if ref in ["A000-099", "B900-999", "C700-799", "D600-699"]:
+            self.paper_image_found = pygame.transform.scale(pygame.image.load(f"images/archives/paper{ref}.png").convert(), (120, 120))
+        else:
+            self.paper_image_found = pygame.transform.scale(pygame.image.load(f"images/archives/others.png").convert(), (120, 120))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -402,6 +409,7 @@ class Archive:
 
     def draw_paper(self, screen):
         screen.blit(self.paper_image, (140, 60))
+        screen.blit(self.paper_image_found, (600, 400))
 
 class Generator:
     def __init__(self, x, y):
@@ -417,6 +425,16 @@ class Generator:
 class Ship:
     def __init__(self, x, y):
         self.image = pygame.transform.scale(pygame.image.load("images/map/ship.png"), (120, 120)).convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+
+class Chair:
+    def __init__(self, x, y):
+        self.image = pygame.transform.scale(pygame.image.load("images/map/chair.png"), (40, 40)).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y

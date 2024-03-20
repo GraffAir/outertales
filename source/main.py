@@ -19,31 +19,21 @@ screen = pygame.display.set_mode((1280, 720))
 pygame.display.set_caption("Outer Tales")
 tile_size = 40
 
-interface_menu = interface.Menu(screen)
 #les variables
+#le menu
+interface_menu = interface.Menu(screen)
 #le niveau de pass pour passer les portes
 room_badge = 0
-#si le jeu est en cours, ou si le joueur est dans le menu, ou s'il regarde un panneau, s'il examine un coffre, ou s'il entre le mot de passe d'un coffre.
-game, menu, sign, watch_chest, open_lock_chest, watch_archives  = False, True, False, False, False, False
-#compteur pour les panneaux et les coffres quand on les ouvre avec mot de passe, qu'on les regarde de plus pres aussi 
-sign_counter = 0
-chest_counter = 0
-lock_counter = 0
-archives_counter = 0
+#si le jeu est en cours, ou si le joueur est dans le menu, ou s'il regarde un panneau, s'il examine un coffre, ou s'il entre le mot de passe d'un coffre, s'il regarde une archive, si cest la fin
+game, menu, sign, watch_chest, open_lock_chest, watch_archives, end1, end2  = False, True, False, False, False, False, False, False
+#compteur pour les panneaux et les coffres quand on les ouvre avec mot de passe, qu'on les regarde de plus pres aussi , quand on regarde une archive, quand on dévérouille un coffre, et quand la fin arrive
+sign_counter, chest_counter, lock_counter, archives_counter, unlock_counter, outro_counter = 0, 0, 0, 0, 0, 0
 #pour entrer des mots de passe de coffre
 try_ = ""
-start_speak = False
-door_speak = False
-good_counter, pass_counter = 0, 0
 vals = [_ for _ in range(0, 10)]
-end_speak = False
-end_speak_already = False
-dialogue = 0
-end1 = False
+#pour les dialogues qui apparaissent à certains moments
+start_speak, door_speak, end_revelation, end_revelation_already, end_dilemma, end_dilemma_already = False, False, False, False, False, False
 
-font_header = pygame.font.SysFont('Comic Sans MS', 35, bold=True)
-def text(text, col=(255, 255, 255)):
-    return font_header.render(f"{text}", False, col)
 #charger les images
 
 #celle du sol
@@ -51,6 +41,7 @@ bg_img = pygame.image.load("images/map/floor.png").convert()
 #le fond noir qui vient s'ajouter quand il n'y a pas d'électricité.
 black_img = pygame.transform.scale(pygame.image.load("images/map/black.png"), (1280, 720)).convert_alpha()
 black_img.fill((255, 255, 255, 175), special_flags=BLEND_RGBA_MULT)
+#celles quand on rentre un mot de passe
 password_img = pygame.transform.scale(pygame.image.load("images/password.png"), (1000, 500))
 password_img1 = pygame.transform.scale(pygame.image.load("images/password_1.png"), (1000, 500))
 password_img2 = pygame.transform.scale(pygame.image.load("images/password_2.png"), (1000, 500))
@@ -58,13 +49,20 @@ password_img3 = pygame.transform.scale(pygame.image.load("images/password_3.png"
 password_img4 = pygame.transform.scale(pygame.image.load("images/password_4.png"), (1000, 500))
 password_img_g = pygame.transform.scale(pygame.image.load("images/password_good.png"), (1000, 500))
 
+#charger le fond sonore
 pygame.mixer.music.load("sound.wav")
 pygame.mixer.music.set_volume(0.7)
+#le compteur pour remettre la musique quand c'est fini
 sound_counter = 451
 
 def draw_badge_level(x, y, num):
    """fonction pour afficher le niveau de badge que possède le joueur"""
    screen.blit(pygame.transform.scale(pygame.image.load(f"images/items/level{num}.png"), (220, 140)), (x, y))
+
+   
+def text(text, col=(255, 255, 255)):
+    """fonction pour afficher du texte"""
+    return pygame.font.SysFont('Arial', 35, True).render(f"{text}", False, col)
 
 #on définit la salle de base et on la dessine
 room = rooms.Rooms[rooms.room_y][rooms.room_x]
@@ -78,6 +76,7 @@ run = True
 while run:
     #régler la clock sur 60 fps
     clock.tick(fps)
+    #la musique
     sound_counter += 1
     if sound_counter == 452:
         #pygame.mixer.music.play()
@@ -103,10 +102,19 @@ while run:
                 row_count += 1
             #la dessiner maintenant
             room_draw = map.Map(room, player.items, rooms.room_num, tile_size)
+
+            #si on est dans la salle de controle, on apprend ce qu'il s'est passé
             if rooms.room_num == 14:
-                if end_speak == False:
-                    if end_speak_already == False:
-                        end_speak = True
+                if end_revelation == False:
+                    if end_revelation_already == False:
+                        end_revelation = True
+            
+            #si on est dans la baie de lancement, on a le choix final
+            if rooms.room_num == 5:
+                if end_dilemma == False:
+                    if end_dilemma_already == False:
+                        if end_revelation_already:
+                            end_dilemma = True
 
             #faire en sorte que la porte qu'on vient de passer reste ouverte
             for exit in map.exits:
@@ -161,19 +169,25 @@ while run:
         for prop in map.props:
             prop.draw(screen)
 
+        #afficher les archives
         for archive in map.archives:
             archive.draw(screen)
-            if pygame.key.get_pressed()[pygame.K_e] == False:
-                archive.paper_watched_cooldown = True
         
+        #s'il existe, afficher le generateur
         if map.generator != None:
             map.generator.draw(screen)
 
+        #s'il existe, afficher le vaisseau pour s'enfuir
         if map.ship != None:
             map.ship.draw(screen)
+
+        #si elle existe, afficher la chaise à la fin
+        if map.chair != None:
+            map.chair.draw(screen)
+
         #mettre à jour le joueur    
-        player_.update(screen, room_draw, map.items_map, map.exits, map.signs, map.chests, map.chests_open, room_badge, rooms.room_num, rooms.room_x, rooms.room_y, map.electricity, map.props, map.archives, map.generator, map.ship, end_speak_already)
-        map.exits, map.items_map, map.chests, map.chests_open, map.archives, room_badge, rooms.room_x, rooms.room_y, open_lock_chest, watch_chest, watch_archives, map.electricity, door_speak, end1  = player_.replace()
+        player_.update(screen, room_draw, map.items_map, map.exits, map.signs, map.chests, map.chests_open, room_badge, rooms.room_num, rooms.room_x, rooms.room_y, map.electricity, map.props, map.archives, map.generator, map.ship, end_revelation_already, map.chair)
+        map.exits, map.items_map, map.chests, map.chests_open, map.archives, room_badge, rooms.room_x, rooms.room_y, open_lock_chest, watch_chest, watch_archives, map.electricity, door_speak, end1, end2  = player_.replace()
 
         #si on tente d'ouvrir un coffre vérouillé
         if open_lock_chest:
@@ -183,11 +197,18 @@ while run:
         if watch_chest:
             game = False
 
+        #si on regarde une archive
         if watch_archives:
             game = False
             
+        #si la fin du vaisseau arrive
         if end1:
             game = False
+
+        #si la fin de l'attente arrive
+        if end2:
+            game = False
+
         #afficher le niveau de badge
         if room_badge > 0:
             draw_badge_level(1000, 500, room_badge)
@@ -196,28 +217,33 @@ while run:
         if map.electricity == False:
             screen.blit(black_img, (0, 0))
 
+        #afficher le dialogue de départ
         if start_speak == False:
-            sound.dialogues(["-Que se passe t-il ?", "-Pourquoi suis-je dans ce vaisseau abandonné ? ", "-Je ne me souviens de rien...", "En plus la lumière à l'air éteinte..."], screen)
+            sound.dialogues(["-Que se passe t-il alors ?", "-Pourquoi suis-je dans ce vaisseau abandonné ? ", "-Je ne me souviens de rien...", "En plus la lumière à l'air éteinte..."], screen)
             start_speak = True
         
+        #si une porte est fermé et qu'on essaie de l'ouvrir sans rien
         if door_speak == True:
             sound.dialogues(["La porte ne veut pas s'ouvrir, l'electricité à l'air coupée", "Il n'y aurait pas quelque chose pour forcer la porte ?"], screen)
             door_speak = False
 
-        if end_speak == True:
+        #la revelation que c'est le personnage qui a fait ca
+        if end_revelation == True:
             sound.dialogues(["-Ne bouge pas !", "-Qui etes vous", "Tu est la pour terminer le travail, cest ca ?", "mais de quoi parlez vous", "Tu ne te souviens pas ? C'est toi qui a tué tout le monde, allez vas y prend ma vie si tu n'a donc pas de coeur"], screen)
-            end_speak = False
-            end_speak_already = True
+            end_revelation = False
+            end_revelation_already = True
 
+        #le dilemme de fin
+        if end_dilemma == True:
+            sound.dialogues(["En entrant dans la baie de lancement, vous être pris d'un grand remord suite à l'annonce que vous avez tué tout le monde", "Vous pouvez vous enfuir avec le vaisseau et garder votre peine a tous jamais...", "Ou vous asseoir sur la chaise et attendre la police pour qu'elle vienne vous prendre"], screen)
+            end_dilemma = False
+            end_dilemma_already = True
 
     #si le menu est ouvert
     elif menu:
-        #dessiner le menu
-        start, volume = interface_menu.draw()  
-        pygame.mixer.music.set_volume(volume[0])      
-        if start:
+        #dessiner le menu        
+        if interface_menu.draw():
             menu, game = False, True
-        
 
     #si un panneau est affiché à l'écran
     elif sign:
@@ -240,6 +266,7 @@ while run:
             chest.draw(screen)
             if chest.contenu != "" and chest.item_took == False:
                 chest.contenu.draw(screen)
+
         #afficher le panneau
         for sign in map.signs:
             if sign.draw == True:
@@ -255,10 +282,11 @@ while run:
     elif open_lock_chest:
         if lock_counter <= 14:
             lock_counter += 1
+        #dessiner le fond
         screen.blit(bg_img, (0, 0))
+        #pour detecter si le joueur appuie sur les touche du clavier
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                print(event.dict)
                 if event.dict["unicode"] == "\x08":
                     try_ = try_[0:(len(try_)-1)]
                 try:
@@ -266,7 +294,8 @@ while run:
                         try_ = try_ + str(event.dict['unicode'])
                 except:
                     pass
-        #s'il a commencé a tapper un mot de passe, alors afficher des asterisques
+
+        #s'il a commencé a tapper un mot de passe, alors changer l'image
         if try_ == "":
             screen.blit(password_img, (140, 110))
         elif len(try_) == 1:
@@ -284,8 +313,8 @@ while run:
                 if ch.try_open == True:
                     if try_ == ch.code:
                         screen.blit(password_img_g, (140, 110))
-                        pass_counter += 1
-                        if pass_counter == 15:
+                        unlock_counter += 1
+                        if unlock_counter == 15:
                             ch.try_open = False
                             ch.locked = False
                             ch.open = True
@@ -295,13 +324,16 @@ while run:
                                 map.items_map.append(ch.contenu)
                             game = True
                             open_lock_chest = False
-                            pass_counter = 0
+                            unlock_counter = 0
+                            try_ = ""
                     else:
                         try_ = ""
 
+        #s'il n'y a pas d'electricité
         if map.electricity == False:
             screen.blit(black_img, (0, 0))
 
+        #pouvoir sortir de ca
         if pygame.key.get_pressed()[pygame.K_e]:
             if lock_counter == 15:
                 game = True
@@ -393,17 +425,30 @@ while run:
         if map.electricity == False:
             screen.blit(black_img, (0, 0))
 
+    #si la fin du vaisseau arrive
     elif end1:
         pygame.draw.rect(screen, (0, 0 ,0), pygame.Rect(0, 0, 1280, 720))
-        if dialogue < 300:
-            dialogue += 1
-        if 0 < dialogue < 150:
+        if outro_counter < 300:
+            outro_counter += 1
+        if 0 < outro_counter < 150:
             screen.blit(text("Vous vous enfuyez avec le vaisseau"), (640 - text("Vous vous enfuyez avec le vaisseau").get_rect().width/2, 720*1/4 - text("Vous vous enfuyez avec le vaisseau").get_rect().height))
-        if  150 <= dialogue < 300:
+        if  150 <= outro_counter < 300:
             screen.blit(text("Cependant vous mourrez de faim au bout de 48H"), (640 - text("Cependant vous mourrez de faim au bout de 48H").get_rect().width/2, 720*2/4 - text("Cependant vous mourrez de faim au bout de 48H").get_rect().height))
-        if dialogue == 300:
+        if outro_counter == 300:
             screen.blit(text("GAME OVER", (255, 0, 0)), (640 - text("GAME OVER").get_rect().width/2, 720*3/4 - text("GAME OVER").get_rect().height))
 
+    #si la fin où le personnage choisit d'attendre la police
+    elif end2:
+        pygame.draw.rect(screen, (0, 0 ,0), pygame.Rect(0, 0, 1280, 720))
+        if outro_counter < 300:
+            outro_counter += 1
+        if 0 < outro_counter < 150:
+            screen.blit(text("La police vient vous chercher 2 jours plus tard"), (640 - text("La police vient vous chercher 2 jours plus tard").get_rect().width/2, 720*1/4 - text("La police vient vous chercher 2 jours plus tard").get_rect().height))
+        if  150 <= outro_counter < 300:
+            screen.blit(text("Vous eccopez d'une peine de 15 ans de prison"), (640 - text("Vous eccopez d'une peine de 15 ans de prison").get_rect().width/2, 720*2/4 - text("Vous eccopez d'une peine de 15 ans de prison").get_rect().height))
+        if outro_counter == 300:
+            screen.blit(text("THE END", (255, 0, 0)), (640 - text("THE END").get_rect().width/2, 720*3/4 - text("THE END").get_rect().height))
+            
     #permet de  quitter le jeu
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
