@@ -44,8 +44,11 @@ class Player:
         #des compteurs pour faire en sort qu'on ne puisse re-essayer d'ouvrir un coffre vérouillé tout de suite(cooldown à -1seconde)
         self.sign_counter = 50
         self.chest_counter = 50
-        self.lock_counter = 15
+        self.lock_cooldown = 15
         self.archive_counter = 15
+        self.door_speak_counter = True
+
+        self.door_test = False
 
     def move_left(self):
         """gérer le déplacement vers la gauche"""
@@ -136,6 +139,21 @@ class Player:
                                 #on ouvre la porte, et on la met directement a la posititon de fin, 
                                 exit.open = True
                                 exit.rect.x, exit.rect.y = exit.end_pos
+            if not 'hammer' in [_.value for _ in items]:
+                if exit.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 4, self.image.get_height() + 4):
+                    if exit.breakable and exit.open == False:
+                        if self.door_speak_counter:
+                            #
+                            self.door_speak = True
+                            self.door_speak_counter = False
+
+        # for exit in self.exits:
+        if exit.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 4, self.image.get_height() + 4):
+            self.door_test = True
+        if self.door_test == False:
+            self.door_speak_counter = True
+        else:
+            self.door_test = False
 
         #on verifie ensuite les collisions avec les portes, pour ne pas rentrer dedans
         self.collisions(exit.rect)
@@ -180,6 +198,8 @@ class Player:
     def collisions_chests(self, chest, screen):
         '''les collisions avec les coffres'''
         #si le joueur entre en collision avec 
+        if pygame.key.get_pressed()[pygame.K_e] == False:
+            self.lock_cooldown = True
         if chest.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 4, self.image.get_height() + 4):
             #s'il appuie sur 
                 #si le coffre est fermé
@@ -199,13 +219,13 @@ class Player:
                     #si le coffre est verouillé
                 else:
                     #si cela fait sufisament de temps depuis la derniere fois ou on a essayé d'ouvrir un coffre vérouillé
-                    screen.blit(pygame.transform.scale(text("appuyer sur E pour forcer la porte"), (300, 40)).convert_alpha(), (940, 40))
+                    screen.blit(pygame.transform.scale(text("appuyer sur E pour déverrouiller le coffre"), (300, 40)).convert_alpha(), (940, 40))
                     if pygame.key.get_pressed()[pygame.K_e]:
-                        if self.lock_counter >= 15:
+                        if self.lock_cooldown:
                             #on modifie la variable lock, qui sera retourné dans la boucle principale, le cooldown revient a 0, et on tente d'ouvrir le coffre
                             self.lock = True
                             chest.try_open = True
-                            self.lock_counter = 0
+                            self.lock_cooldown = False
                 #si jamais le coffre est déja ouvert
             elif chest.open:
                 #s'il est dans la bonne salle
@@ -243,8 +263,6 @@ class Player:
         #si les compteur qui indique qu'on a regardé un coffre ou esayé d'en ouvrir un vérouillé sont en dessous de 50, on les augmente
         if self.chest_counter < 50:
             self.chest_counter += 1
-        if self.lock_counter < 50:
-            self.lock_counter += 1
         #on verifie les collisions avec le coffre, pour ne pas rentrer dedans
         if chest.room == self.room_num:
             self.collisions(chest.rect)
@@ -280,13 +298,22 @@ class Player:
 
     def collisions_generator(self, generator, screen):
         if generator.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 4, self.image.get_height() + 4):
-            if generator.actionned == False:
-                screen.blit(pygame.transform.scale(text("appuyer sur E pour rallumer le génerateur"), (300, 40)).convert_alpha(), (940, 40))
-                if pygame.key.get_pressed()[pygame.K_e]:
-                    generator.actionned = True
-                    self.electricity = True
+            if self.electricity == False:
+                if generator.actionned == False:
+                    screen.blit(pygame.transform.scale(text("appuyer sur E pour rallumer le génerateur"), (300, 40)).convert_alpha(), (940, 40))
+                    if pygame.key.get_pressed()[pygame.K_e]:
+                        generator.actionned = True
+                        self.electricity = True
         self.collisions(generator.rect)
 
+    def collisions_ship(self, ship, screen):
+        if self.end_speak == True:
+            if ship.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 4, self.image.get_height() + 4):
+                screen.blit(pygame.transform.scale(text("appuyer sur E pour aller dans le vaisseau"), (300, 40)).convert_alpha(), (940, 40))
+                if pygame.key.get_pressed()[pygame.K_e]:
+                    self.end = True
+
+        self.collisions(ship.rect)
     def use_items(self):
         "une fois un item dans l'inventaire, on peut l'utiliser (une clé par exemple augmente le niveau de pass pour les sorties)"
         global items
@@ -312,56 +339,48 @@ class Player:
             self.room_y -= 1
             self.rect.y = 720 - 40 * 2
 
-    def update(self, screen, room_draw, items_map, exits, signs, chests, chests_open, room_badge, room_num, room_x, room_y, electricity, props, archives, generator):
+    def update(self, screen, room_draw, items_map, exits, signs, chests, chests_open, room_badge, room_num, room_x, room_y, electricity, props, archives, generator, ship, end_speak):
         """gérer tous les évènements"""
         global items
         #on crée un objet avec self pour pouvoir changer les variables avec la méthode replace et les utiliser dans les autres methodes
         self.exits, self.items_map, self.chests, self.chests_open, self.archives, self.room_badge, self.room_num, self.room_x, self.room_y, self.electricity = exits, items_map, chests, chests_open, archives, room_badge, room_num, room_x, room_y, electricity
         #valeur renvoyé dans la boucle principale pour indique sui on ouvre un coffre vérouillé, ou si on regarde un coffre de plus pres
         self.lock, self.chest, self.archive = False, False, False
+        self.door_speak = False
+        self.end_speak = end_speak
+        self.end = False
         #les variables qui symbolise le déplacement qui sera réalisé si possible
         self.dx, self.dy = 0, 0
         #on vérifie s'il appuie sur les touches de déplacements, et si oui on fait le deplaceement en question, et on change l'animation
         key = pygame.key.get_pressed()
-        if key[pygame.K_RIGHT] and key[pygame.K_UP]:
-            self.speed = 3
+        if key[pygame.K_UP] and key[pygame.K_RIGHT]:
             self.move_right()
             self.move_up()
-            self.speed = 4
-        elif key[pygame.K_RIGHT] and key[pygame.K_DOWN]:
-            self.speed = 3
-            self.move_right()
-            self.move_down()
-            self.speed = 4
-        elif key[pygame.K_RIGHT] and key[pygame.K_LEFT]:
-            self.speed = 3
-            self.move_right()
-            self.move_left()
-            self.speed = 4
-        elif key[pygame.K_LEFT] and key[pygame.K_UP]:
-            self.speed = 3
+        elif key[pygame.K_UP] and key[pygame.K_LEFT]:
             self.move_left()
             self.move_up()
-            self.speed = 4
-        elif key[pygame.K_LEFT] and key[pygame.K_DOWN]:
-            self.speed = 3
-            self.move_left()
-            self.move_down()
-            self.speed = 4
         elif key[pygame.K_UP] and key[pygame.K_DOWN]:
-            self.speed = 3
-            self.move_up()
+            self.direction = 2
+            self.counter += 1
+            self.change_animation()
+        elif key[pygame.K_RIGHT] and key[pygame.K_LEFT]:
+            self.direction = 1
+            self.counter += 1
+            self.change_animation()
+        elif key[pygame.K_RIGHT] and key[pygame.K_DOWN]:
+            self.move_right()
             self.move_down()
-            self.speed = 4
+        elif key[pygame.K_DOWN] and key[pygame.K_LEFT]:
+            self.move_left()
+            self.move_down()
         elif key[pygame.K_UP]:
             self.move_up()
-        elif key[pygame.K_LEFT]:
-            self.move_left()
         elif key[pygame.K_DOWN]:
             self.move_down()
         elif key[pygame.K_RIGHT]:
             self.move_right()
-
+        elif key[pygame.K_LEFT]:
+            self.move_left()
         #si le joueur ne se deplace pas, on laisse l'image en question
         if key[pygame.K_RIGHT] == False and key[pygame.K_LEFT] == False and key[pygame.K_UP] == False and key[pygame.K_DOWN] == False:
             self.index = 0
@@ -414,6 +433,9 @@ class Player:
 
         if generator != None:
             self.collisions_generator(generator, screen)
+
+        if ship != None:
+            self.collisions_ship(ship, screen)
         
         #on utilise les items
         self.use_items()
@@ -432,5 +454,5 @@ class Player:
         
     def replace(self):
         """on change les variables qui ont été modifiés"""
-        return self.exits, self.items_map, self.chests, self.chests_open, self.archives, self.room_badge, self.room_x, self.room_y, self.lock, self.chest, self.archive, self.electricity
+        return self.exits, self.items_map, self.chests, self.chests_open, self.archives, self.room_badge, self.room_x, self.room_y, self.lock, self.chest, self.archive, self.electricity, self.door_speak, self.end
         
