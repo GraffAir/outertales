@@ -79,7 +79,7 @@ while run:
     #la musique
     sound_counter += 1
     if sound_counter == 452:
-        #pygame.mixer.music.play()
+        pygame.mixer.music.play()
         sound_counter = 0   
     #si le jeu est en cours
     if game:
