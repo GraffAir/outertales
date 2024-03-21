@@ -282,6 +282,7 @@ while run:
 
     #si le joueur ouvre un coffre verouillé
     elif open_lock_chest:
+        fps = 25
         if lock_counter <= 14:
             lock_counter += 1
         #dessiner le fond
@@ -328,6 +329,7 @@ while run:
                             open_lock_chest = False
                             unlock_counter = 0
                             try_ = ""
+                            fps = 60
                     else:
                         try_ = ""
 
@@ -342,8 +344,10 @@ while run:
                 open_lock_chest = False
                 try_ = ""
                 lock_counter = 0
+                fps = 60
                 for ch in map.chests:
                     ch.try_open = False
+
 
     #si le joueur observe un coffre de plus pres
     elif watch_chest:
