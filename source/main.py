@@ -42,12 +42,12 @@ bg_img = pygame.image.load("images/map/floor.png").convert()
 black_img = pygame.transform.scale(pygame.image.load("images/map/black.png"), (1280, 720)).convert_alpha()
 black_img.fill((255, 255, 255, 175), special_flags=BLEND_RGBA_MULT)
 #celles quand on rentre un mot de passe
-password_img = pygame.transform.scale(pygame.image.load("images/password.png"), (1000, 500))
-password_img1 = pygame.transform.scale(pygame.image.load("images/password_1.png"), (1000, 500))
-password_img2 = pygame.transform.scale(pygame.image.load("images/password_2.png"), (1000, 500))
-password_img3 = pygame.transform.scale(pygame.image.load("images/password_3.png"), (1000, 500))
-password_img4 = pygame.transform.scale(pygame.image.load("images/password_4.png"), (1000, 500))
-password_img_g = pygame.transform.scale(pygame.image.load("images/password_good.png"), (1000, 500))
+password_img = pygame.transform.scale(pygame.image.load("images/password.png"), (1000, 500)).convert()
+password_img1 = pygame.transform.scale(pygame.image.load("images/password_1.png"), (1000, 500)).convert()
+password_img2 = pygame.transform.scale(pygame.image.load("images/password_2.png"), (1000, 500)).convert()
+password_img3 = pygame.transform.scale(pygame.image.load("images/password_3.png"), (1000, 500)).convert()
+password_img4 = pygame.transform.scale(pygame.image.load("images/password_4.png"), (1000, 500)).convert()
+password_img_g = pygame.transform.scale(pygame.image.load("images/password_good.png"), (1000, 500)).convert()
 
 #charger le fond sonore
 pygame.mixer.music.load("sound.wav")
