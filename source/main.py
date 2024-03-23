@@ -60,9 +60,9 @@ def draw_badge_level(x, y, num):
    screen.blit(pygame.transform.scale(pygame.image.load(f"images/items/level{num}.png"), (220, 140)), (x, y))
 
    
-def text(text, col=(255, 255, 255)):
+def text(text, col=(255, 255, 255), pol="Arial"):
     """fonction pour afficher du texte"""
-    return pygame.font.SysFont('Arial', 35, True).render(f"{text}", False, col)
+    return pygame.font.SysFont(pol, 35, True).render(f"{text}", False, col)
 
 #on définit la salle de base et on la dessine
 room = rooms.Rooms[rooms.room_y][rooms.room_x]
@@ -115,6 +115,11 @@ while run:
                     if end_dilemma_already == False:
                         if end_revelation_already:
                             end_dilemma = True
+            
+            if rooms.room_num == 16:
+                bg_img = pygame.transform.scale(pygame.image.load("images/map/floor_labyrinthe.png"), (1280, 720)).convert()
+            else:
+                bg_img = pygame.transform.scale(pygame.image.load("images/map/floor.png"), (1280, 720)).convert()
 
             #faire en sorte que la porte qu'on vient de passer reste ouverte
             for exit in map.exits:
@@ -378,7 +383,8 @@ while run:
         for ch in map.chests_open:
             if ch.watched == True:
                 ch.draw(screen)
-                screen.blit(pygame.transform.scale(pygame.image.load(f"images/ref_chest/{ch.ref}.png"), (560, 560)), (360, 80))
+                screen.blit(pygame.transform.scale(pygame.image.load(f"images/box_open.png"), (560, 560)), (360, 80))
+                screen.blit(pygame.transform.scale(text("appuyer sur E pour revenir au jeu", (0, 0, 0), "Comic Sans MS"), (300, 40)).convert_alpha(), (940, 40))
                 #si le joueur appuie sur E ou se déplace, l'image s'enleve
                 if pygame.key.get_pressed()[pygame.K_e] or pygame.key.get_pressed()[pygame.K_UP] or pygame.key.get_pressed()[pygame.K_DOWN] or pygame.key.get_pressed()[pygame.K_LEFT] or pygame.key.get_pressed()[pygame.K_RIGHT]:
                     if chest_counter >= 50:
