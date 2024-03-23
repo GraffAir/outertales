@@ -58,6 +58,8 @@ class Map:
                         img = mur_img
                     elif (0 < row_count < 17) and col_count == 31:
                         img = pygame.transform.rotate(mur_img, 90)
+                    else:
+                        img = pygame.transform.rotate(mur_img, 0)
                     img_rect = img.get_rect()
                     img_rect.x, img_rect.y = col_count * tile_size, row_count * tile_size
                     tile = (img, img_rect)
@@ -121,6 +123,8 @@ class Map:
                 elif str(tile)[0] == "P":
                     prop = Props(col_count * tile_size, row_count * tile_size, tile[1:])
                     props.append(prop)
+                    if prop.collision_prop:
+                        props.append(prop.collision_prop)
                 elif str(tile)[0] == "A":
                     archive = Archive(col_count * tile_size, row_count * tile_size, tile[1:])
                     archives.append(archive)
@@ -372,20 +376,44 @@ class Chest:
             self.draw(screen)
     
 class Props:
-    def __init__(self, x, y, image):
-        self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
-        if image == "bed":
+    def __init__(self, x, y, image, can_collide=True, width=10, height=10):
+        
+        self.can_collide = can_collide
+        self.collision_prop = None
+        if image == "invisible":
+            self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
+            self.image = pygame.transform.scale(self.image, (width, height)).convert_alpha()
+        elif image == "bed":
+            self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
             self.image = pygame.transform.scale(self.image, (80, 120)).convert_alpha()
-        elif image == "biblio":
-            self.image = pygame.transform.scale(self.image, (40, 40)).convert_alpha()
+        elif image[:-1] == "biblio":
+            w,h,s = 100, 130, 110
+            self.image = pygame.image.load(f"images/props/biblio.png").convert_alpha()
+            self.image = pygame.transform.scale(self.image, (w, h)).convert_alpha()
+            self.can_collide = False
+            self.collision_prop = Props(x, y+s, "invisible", width=w, height=h-s)
         elif image == "gaz":
+            self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
             self.image = pygame.transform.scale(self.image, (20, 60)).convert_alpha()
+        elif image == "couch":
+            self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
+            self.image = pygame.transform.scale(self.image, (130, 40)).convert_alpha()
+        elif image == "mur" or image[:-1] == "mur":
+            if image == "mur3":
+                self.image = pygame.image.load(f"images/props/mur1.png").convert_alpha()
+                self.image = pygame.transform.rotate(self.image, -90)
+            else:
+                self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
+            self.image = pygame.transform.scale(self.image, (40, 40)).convert_alpha()
         elif image == "coke":
+            self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
             self.image = pygame.transform.scale(self.image, (10, 20)).convert_alpha()
         elif image == "table":
+            self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
             self.image = pygame.transform.scale(self.image, (150, 100)).convert_alpha()
-        elif image == "seat": 
-            self.image = pygame.transform.scale(self.image, (20, 20)).convert_alpha()
+        elif image == "fat_table":
+            self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
+            self.image = pygame.transform.scale(self.image, (500, 100)).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = x, y
     

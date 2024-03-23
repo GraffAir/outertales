@@ -144,8 +144,7 @@ while run:
         #afficher le sol
         screen.blit(bg_img, (0, 0))
 
-        #dessine la map
-        room_draw.draw(screen)
+        
 
         #afficher les portes de sortie, et les faire bouger si nécessaire
         for exit in map.exits:
@@ -171,6 +170,13 @@ while run:
         for sign in map.signs:
             sign, game = sign.update(screen, sign, game)
 
+        #mettre à jour le joueur    
+        player_.update(screen, room_draw, map.items_map, map.exits, map.signs, map.chests, map.chests_open, room_badge, rooms.room_num, rooms.room_x, rooms.room_y, map.electricity, map.props, map.archives, map.generator, map.ship, end_revelation_already, map.chair)
+        map.exits, map.items_map, map.chests, map.chests_open, map.archives, room_badge, rooms.room_x, rooms.room_y, open_lock_chest, watch_chest, watch_archives, map.electricity, door_speak, end1, end2, not_enough_badge_speak  = player_.replace()
+
+        #dessine la map
+        room_draw.draw(screen)
+
         #afficher les props
         for prop in map.props:
             prop.draw(screen)
@@ -191,9 +197,7 @@ while run:
         if map.chair != None:
             map.chair.draw(screen)
 
-        #mettre à jour le joueur    
-        player_.update(screen, room_draw, map.items_map, map.exits, map.signs, map.chests, map.chests_open, room_badge, rooms.room_num, rooms.room_x, rooms.room_y, map.electricity, map.props, map.archives, map.generator, map.ship, end_revelation_already, map.chair)
-        map.exits, map.items_map, map.chests, map.chests_open, map.archives, room_badge, rooms.room_x, rooms.room_y, open_lock_chest, watch_chest, watch_archives, map.electricity, door_speak, end1, end2, not_enough_badge_speak  = player_.replace()
+        
 
         #si on tente d'ouvrir un coffre vérouillé
         if open_lock_chest:

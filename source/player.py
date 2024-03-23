@@ -259,7 +259,8 @@ class Player:
 
     def collisions_props(self, prop):
         '''les collisions avec les props'''
-        self.collisions(prop.rect)
+        if prop.can_collide == True:
+            self.collisions(prop.rect)
 
     def collisions_archives(self, archive):
         """les collisions avec les archives"""
