@@ -382,6 +382,10 @@ class Props:
             self.image = pygame.transform.scale(self.image, (20, 60)).convert_alpha()
         elif image == "coke":
             self.image = pygame.transform.scale(self.image, (10, 20)).convert_alpha()
+        elif image == "table":
+            self.image = pygame.transform.scale(self.image, (150, 100)).convert_alpha()
+        elif image == "seat": 
+            self.image = pygame.transform.scale(self.image, (20, 20)).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = x, y
     

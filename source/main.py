@@ -451,7 +451,7 @@ while run:
         if 0 < outro_counter < 150:
             screen.blit(text("Vous vous enfuyez avec le vaisseau"), (640 - text("Vous vous enfuyez avec le vaisseau").get_rect().width/2, 720*1/4 - text("Vous vous enfuyez avec le vaisseau").get_rect().height))
         if  150 <= outro_counter < 300:
-            screen.blit(text("Cependant vous mourrez de faim au bout de 48H"), (640 - text("Cependant vous mourrez de faim au bout de 48H").get_rect().width/2, 720*2/4 - text("Cependant vous mourrez de faim au bout de 48H").get_rect().height))
+            screen.blit(text("Vous mourrez de faim au bout de 48H"), (640 - text("Cependant vous mourrez de faim au bout de 48H").get_rect().width/2, 720*2/4 - text("Cependant vous mourrez de faim au bout de 48H").get_rect().height))
         if outro_counter == 300:
             screen.blit(text("GAME OVER", (255, 0, 0)), (640 - text("GAME OVER").get_rect().width/2, 720*3/4 - text("GAME OVER").get_rect().height))
 
