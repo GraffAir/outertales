@@ -405,7 +405,7 @@ class Archive:
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
-        screen.blit(text(self.ref), (self.rect.x, self.rect.y + 10))
+        screen.blit(text(self.ref[:4]), (self.rect.x + 20, self.rect.y + 10))
 
     def draw_paper(self, screen):
         screen.blit(self.paper_image, (140, 60))
