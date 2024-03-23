@@ -16,13 +16,13 @@ def dialogues(liste_textes, screen):
     
 
     for i in range(len(liste_textes)):
-        rect = pygame.Surface((1280, 100))  # Create a surface for the rectangle
-        rect.fill((255, 255, 255))  # Fill the rectangle with the clear color
-        screen.blit(rect, (0, 0))  # Blit the rectangle onto the screen at position (0, 0)
+        rect = pygame.Surface((980, 100))  # Create a surface for the rectangle
+        rect.fill((0, 0, 0))  # Fill the rectangle with the clear color
+        screen.blit(rect, (150, 500))  # Blit the rectangle onto the screen at position (0, 0)
         text_font2 = pygame.font.SysFont('Arial', 23, bold = False, italic = True)
         img2 = text_font2.render("Appuyer sur ESPACE pour continuer", True, (0, 0, 0))
         screen.blit(img2, (1280-img2.get_rect().width, 100-img2.get_rect().height))
-        subTitles(liste_textes[i], 'Arial', (0,0,0), 0, 0, False, True, screen)
+        subTitles(liste_textes[i], 'Arial', (255, 255, 255), 150, 500, False, True, screen)
         pygame.display.update()  # Update the display after rendering the text
         
         while True:
