@@ -46,9 +46,6 @@ class Player:
         self.chest_counter = 50
         self.lock_cooldown = 15
         self.archive_counter = 15
-        self.door_speak_counter = True
-
-        self.door_test = False
 
     def move_left(self):
         """gérer le déplacement vers la gauche"""
@@ -115,6 +112,9 @@ class Player:
             #si le joueur entre en collisions avec une porte
             if exit.rect.colliderect(self.rect.x + self.dx - 40, self.rect.y + self.dy - 40, self.image.get_width() + 80, self.image.get_height() + 80):
                 #on vérifie si le joueur à le niveau de pass requis, que la porte n'est pas cassable, et que la porte est fermée
+                if exit.breakable == False and exit.open == False and self.room_badge < int(exit.value):
+                    if pygame.key.get_pressed()[pygame.K_e]:
+                        self.not_enough_badge = True
                 if exit.breakable == False and exit.open == False and self.room_badge >= int(exit.value):
                     #on affiche l'image en haut disant "appuyer sur E pour ouvrir la porte"
                     screen.blit(pygame.transform.scale(text("appuyer sur E pour ouvrir la porte"), (300, 40)).convert_alpha(), (940, 40))
@@ -140,20 +140,10 @@ class Player:
                                 exit.open = True
                                 exit.rect.x, exit.rect.y = exit.end_pos
             if not 'hammer' in [_.value for _ in items]:
-                if exit.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 4, self.image.get_height() + 4):
-                    if exit.breakable and exit.open == False:
-                        if self.door_speak_counter:
-                            #
+                if exit.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 20, self.image.get_width() + 4, self.image.get_height() + 40):
+                    if pygame.key.get_pressed()[pygame.K_e]:
+                        if exit.breakable and exit.open == False:
                             self.door_speak = True
-                            self.door_speak_counter = False
-
-        # for exit in self.exits:
-        if exit.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 4, self.image.get_height() + 4):
-            self.door_test = True
-        if self.door_test == False:
-            self.door_speak_counter = True
-        else:
-            self.door_test = False
 
         #on verifie ensuite les collisions avec les portes, pour ne pas rentrer dedans
         self.collisions(exit.rect)
@@ -356,6 +346,7 @@ class Player:
         self.exits, self.items_map, self.chests, self.chests_open, self.archives, self.room_badge, self.room_num, self.room_x, self.room_y, self.electricity = exits, items_map, chests, chests_open, archives, room_badge, room_num, room_x, room_y, electricity
         #valeur renvoyé dans la boucle principale pour indique sui on ouvre un coffre vérouillé, ou si on regarde un coffre de plus pres
         self.lock, self.chest, self.archive = False, False, False
+        self.not_enough_badge = False
         self.door_speak = False
         self.end_speak = end_speak
         self.end = False
@@ -468,5 +459,5 @@ class Player:
         
     def replace(self):
         """on change les variables qui ont été modifiés"""
-        return self.exits, self.items_map, self.chests, self.chests_open, self.archives, self.room_badge, self.room_x, self.room_y, self.lock, self.chest, self.archive, self.electricity, self.door_speak, self.end, self.end2
+        return self.exits, self.items_map, self.chests, self.chests_open, self.archives, self.room_badge, self.room_x, self.room_y, self.lock, self.chest, self.archive, self.electricity, self.door_speak, self.end, self.end2, self.not_enough_badge
         

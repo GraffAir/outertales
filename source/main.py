@@ -33,7 +33,7 @@ try_ = ""
 vals = [_ for _ in range(0, 10)]
 #pour les dialogues qui apparaissent à certains moments
 start_speak, door_speak, end_revelation, end_revelation_already, end_dilemma, end_dilemma_already = False, False, False, False, False, False
-
+not_enough_badge_speak = False
 #charger les images
 
 #celle du sol
@@ -192,7 +192,7 @@ while run:
 
         #mettre à jour le joueur    
         player_.update(screen, room_draw, map.items_map, map.exits, map.signs, map.chests, map.chests_open, room_badge, rooms.room_num, rooms.room_x, rooms.room_y, map.electricity, map.props, map.archives, map.generator, map.ship, end_revelation_already, map.chair)
-        map.exits, map.items_map, map.chests, map.chests_open, map.archives, room_badge, rooms.room_x, rooms.room_y, open_lock_chest, watch_chest, watch_archives, map.electricity, door_speak, end1, end2  = player_.replace()
+        map.exits, map.items_map, map.chests, map.chests_open, map.archives, room_badge, rooms.room_x, rooms.room_y, open_lock_chest, watch_chest, watch_archives, map.electricity, door_speak, end1, end2, not_enough_badge_speak  = player_.replace()
 
         #si on tente d'ouvrir un coffre vérouillé
         if open_lock_chest:
@@ -229,8 +229,12 @@ while run:
         
         #si une porte est fermé et qu'on essaie de l'ouvrir sans rien
         if door_speak == True:
-            sound.dialogues(["La porte ne veut pas s'ouvrir, l'electricité à l'air coupée", "Il n'y aurait pas quelque chose pour forcer la porte ?"], screen)
+            sound.dialogues(["La porte ne veut pas s'ouvrir, l'electricité à l'air coupée. Il n'y aurait pas quelque chose pour forcer la porte ?"], screen)
             door_speak = False
+
+        if not_enough_badge_speak == True:
+            sound.dialogues(["Niveau de carte suplémentaire recquis"], screen)
+            not_enough_badge_speak = False
 
         #la revelation que c'est le personnage qui a fait ca
         if end_revelation == True:
