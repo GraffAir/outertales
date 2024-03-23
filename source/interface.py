@@ -18,7 +18,7 @@ settings_bg_img = pygame.Surface(menu_bg_img.get_size(), 32)
 settings_bg_img.set_alpha(200, pygame.RLEACCEL)
 
 # les textes
-text_title = font_header1.render("Outertale", True, (255, 255, 255))
+text_title = font_header1.render("Outer Tale", True, (255, 255, 255))
 textbutton_play = font_header2.render("Jouer", True, ACCENT_COLOR)
 textbutton_settings = font_header2.render("Paramètres", True, ACCENT_COLOR)
 textbutton_leave = font_header2.render("Quitter", True, ACCENT_COLOR)

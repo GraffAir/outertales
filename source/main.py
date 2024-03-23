@@ -16,7 +16,7 @@ fps = 60
 
 #configurer la fenêtre et la taille des cases
 screen = pygame.display.set_mode((1280, 720))   
-pygame.display.set_caption("Outer Tales")
+pygame.display.set_caption("Outer Tale")
 pygame.display.set_icon(pygame.image.load("images/logo.png"))
 tile_size = 40
 
