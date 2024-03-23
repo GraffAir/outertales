@@ -390,6 +390,7 @@ while run:
                 ch.draw(screen)
                 screen.blit(pygame.transform.scale(pygame.image.load(f"images/box_open.png"), (560, 560)), (360, 80))
                 screen.blit(pygame.transform.scale(text("appuyer sur E pour revenir au jeu", (0, 0, 0), "Comic Sans MS"), (300, 40)).convert_alpha(), (940, 40))
+                screen.blit(text(f"{ch.ref}", (0, 0, 0), "Comic Sans MS"), (1280/2-text(f"{ch.ref}", (0, 0, 0), "Comic Sans MS").get_rect().width/2, 90))
                 #si le joueur appuie sur E ou se déplace, l'image s'enleve
                 if pygame.key.get_pressed()[pygame.K_e] or pygame.key.get_pressed()[pygame.K_UP] or pygame.key.get_pressed()[pygame.K_DOWN] or pygame.key.get_pressed()[pygame.K_LEFT] or pygame.key.get_pressed()[pygame.K_RIGHT]:
                     if chest_counter >= 50:
