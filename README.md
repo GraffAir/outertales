@@ -26,6 +26,13 @@ Amnésique et piégé au fin fond de l'espace, il ne reste que vous pour résoud
 
 **Outer Tale** est un jeu d'aventure et de découverte, dans lequel vous jouez le rôle d'un astronaute qui enquête sur la mystérieuse disparition de tout son équipage. Arriverez-vous à comprendre ce qu'il s'est passé, et à vous enfuir ?
 
+# Installation
+## Téléchargement direct
+Directement depuis un navigateur ou via un terminal, vous pouvez télécharger ce dépôt sur votre machine et jouer au jeu en ouvrant le fichier main.py. Veillez à bien télécharger les modules présents dans requirements.txt sur votre machine.
+
+## Exécutable
+TODO
+
 # Licences
 Le code présent sous ce dépôt a été entièrement développé par les membres de l'équipe et est publié sous licence [GPL v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html) conformément au règlement des trophées NSI.
 Notez toutefois que les images, assets, musiques et textes n'entrent pas dans cette catégorie et ont des conditions un peu plus spécifiques :
