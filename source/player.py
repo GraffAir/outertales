@@ -315,6 +315,16 @@ class Player:
 
         self.collisions(chair.rect)
 
+    def collisions_control(self, control, screen):
+        """collisions avec le panneau de controle"""
+        if control.isActived == False:
+            if control.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 4, self.image.get_height() + 4):
+                screen.blit(pygame.transform.scale(text("appuyer sur E pour ouvrir la baie de lancement"), (300, 40)).convert_alpha(), (940, 40))
+                if pygame.key.get_pressed()[pygame.K_e]:
+                    control.isActived = True
+
+        self.collisions(control.rect)
+
     def use_items(self):
         "une fois un item dans l'inventaire, on peut l'utiliser (une clé par exemple augmente le niveau de pass pour les sorties)"
         global items
@@ -340,7 +350,7 @@ class Player:
             self.room_y -= 1
             self.rect.y = 720 - 40 * 2
 
-    def update(self, screen, room_draw, items_map, exits, signs, chests, chests_open, room_badge, room_num, room_x, room_y, electricity, props, archives, generator, ship, end_speak, chair):
+    def update(self, screen, room_draw, items_map, exits, signs, chests, chests_open, room_badge, room_num, room_x, room_y, electricity, props, archives, generator, ship, end_speak, chair, control_panel):
         """gérer tous les évènements"""
         global items
         #on crée un objet avec self pour pouvoir changer les variables avec la méthode replace et les utiliser dans les autres methodes
@@ -440,6 +450,9 @@ class Player:
 
         if chair != None:
             self.collisions_chair(chair, screen)
+
+        if control_panel != None:
+            self.collisions_control(control_panel, screen)
         
         #on utilise les items
         self.use_items()

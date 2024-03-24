@@ -11,12 +11,13 @@ items_map, chests, chests_open, exits, signs, props, archives = [], [], [], [], 
 generator = None
 ship = None
 chair = None
+control_panel = None
 
 class Map:
     """classe pour pouvoir dessiner la salle"""
     def __init__(self, liste, items, room_num, tile_size):
         """créer une liste contient les images et les coordonnées à dessiner"""
-        global electricity, items_map, chests, chests_open, exits, signs, props, archives, generator, ship, chair
+        global electricity, items_map, chests, chests_open, exits, signs, props, archives, generator, ship, chair, control_panel
         self.tile_list = []
 
         #pour les items au sol
@@ -26,10 +27,11 @@ class Map:
         mur_img = pygame.transform.scale(pygame.image.load("images/map/mur.png"), (tile_size, tile_size)).convert()
         coin_img = pygame.transform.scale(pygame.image.load("images/map/coin.png"), (tile_size, tile_size)).convert()
         bush_img = pygame.transform.scale(pygame.image.load("images/map/bush.png"), (tile_size, tile_size)).convert()
+        blood_img = pygame.transform.scale(pygame.image.load("images/map/blood.png"), (tile_size, tile_size)).convert_alpha()
         #glass_img = pygame.transform.scale(pygame.image.load("images/map/glass_wall.png"), (tile_size, tile_size))
 
         #pour modifier les valeurs, les sorties, les itemms
-        exits, items_map, items_verifications, chests_ver, signs, chests, props, archives, generator, ship, chair = [], [], [], [], [], [], [], [], None, None, None
+        exits, items_map, items_verifications, chests_ver, signs, chests, props, archives, generator, ship, chair, control_panel = [], [], [], [], [], [], [], [], None, None, None, None
 
         #pour les portes de sorties
         exit_dir = 'left'
@@ -68,6 +70,12 @@ class Map:
                     img = bush_img
                     img_rect = img.get_rect()
                     img_rect.x, img_rect.y = col_count * tile_size, row_count * tile_size
+                    tile = (img, img_rect)
+                    self.tile_list.append(tile)
+                elif tile == 3:
+                    img = blood_img
+                    img_rect = img.get_rect()
+                    img_rect.x, img_rect.y, img_rect.width, img_rect.height = col_count * tile_size, row_count * tile_size, 0, 0
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
                 #si elle commence par E alors c'est une porte vers une autre salle
@@ -153,6 +161,8 @@ class Map:
                     ship = Ship(col_count * tile_size, row_count * tile_size)
                 elif str(tile)[0] == "Z":
                     chair = Chair(col_count * tile_size, row_count * tile_size)
+                elif str(tile)[0] == "F":
+                    control_panel = Control(col_count * tile_size, row_count * tile_size)
                 col_count += 1
             row_count += 1
     
@@ -377,7 +387,6 @@ class Chest:
     
 class Props:
     def __init__(self, x, y, image, can_collide=True, width=10, height=10):
-        
         self.can_collide = can_collide
         self.collision_prop = None
         if image == "invisible":
@@ -418,8 +427,19 @@ class Props:
             self.image = pygame.image.load(f"images/props/{image}.png").convert()
             self.image = pygame.transform.scale(self.image, (160, 80)).convert_alpha()
             self.image = pygame.transform.rotate(self.image, 90)
+        elif image == 'cadaver':
+            self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
+            self.image = pygame.transform.scale(self.image, (80, 40)).convert_alpha()
+        elif image == 'end_perso':
+            self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
+            self.image = pygame.transform.scale(self.image, (40, 55)).convert_alpha()
+            self.image = pygame.transform.flip(self.image, True, False)
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = x, y
+        if image == 'cadaver':
+            self.isDiscover = True
+        else:
+            self.isDiscover = False
     
     def draw(self, screen):
         screen.blit(self.image, self.rect)
@@ -476,6 +496,17 @@ class Chair:
         self.rect.x = x
         self.rect.y = y
         self.isCollide = False
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+
+class Control:
+    def __init__(self, x, y):
+        self.image = pygame.transform.scale(pygame.image.load("images/map/control_panel.png"), (80, 80)).convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.isActived = False
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)

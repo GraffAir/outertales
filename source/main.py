@@ -35,6 +35,9 @@ vals = [_ for _ in range(0, 10)]
 #pour les dialogues qui apparaissent à certains moments
 start_speak, door_speak, end_revelation, end_revelation_already, end_dilemma, end_dilemma_already = False, False, False, False, False, False
 not_enough_badge_speak = False
+control_panel_actived = False
+discover_cadaver = False
+discover_cadaver_already = False
 #charger les images
 
 #celle du sol
@@ -113,8 +116,13 @@ while run:
             if rooms.room_num == 5:
                 if end_dilemma == False:
                     if end_dilemma_already == False:
-                        if end_revelation_already:
+                        if control_panel_actived:
                             end_dilemma = True
+
+            if rooms.room_num == 8:
+                if discover_cadaver == False:
+                    if discover_cadaver_already == False:
+                        discover_cadaver = True
             
             if rooms.room_num == 16:
                 bg_img = pygame.transform.scale(pygame.image.load("images/map/floor_labyrinthe.png"), (1280, 720)).convert()
@@ -169,12 +177,12 @@ while run:
         for sign in map.signs:
             sign, game = sign.update(screen, sign, game)
 
-        #mettre à jour le joueur    
-        player_.update(screen, room_draw, map.items_map, map.exits, map.signs, map.chests, map.chests_open, room_badge, rooms.room_num, rooms.room_x, rooms.room_y, map.electricity, map.props, map.archives, map.generator, map.ship, end_revelation_already, map.chair)
-        map.exits, map.items_map, map.chests, map.chests_open, map.archives, room_badge, rooms.room_x, rooms.room_y, open_lock_chest, watch_chest, watch_archives, map.electricity, door_speak, not_enough_badge_speak  = player_.replace()
-
         #dessine la map
         room_draw.draw(screen)
+
+        #mettre à jour le joueur    
+        player_.update(screen, room_draw, map.items_map, map.exits, map.signs, map.chests, map.chests_open, room_badge, rooms.room_num, rooms.room_x, rooms.room_y, map.electricity, map.props, map.archives, map.generator, map.ship, end_revelation_already, map.chair, map.control_panel)
+        map.exits, map.items_map, map.chests, map.chests_open, map.archives, room_badge, rooms.room_x, rooms.room_y, open_lock_chest, watch_chest, watch_archives, map.electricity, door_speak, not_enough_badge_speak  = player_.replace()
 
         #afficher les props
         for prop in map.props:
@@ -199,6 +207,11 @@ while run:
             map.chair.draw(screen)
             if map.chair.isCollide:
                 end2, game = True, False
+
+        if map.control_panel != None:
+            map.control_panel.draw(screen)
+            if map.control_panel.isActived:
+                control_panel_actived = True
 
         #si on tente d'ouvrir un coffre vérouillé
         if open_lock_chest:
@@ -230,27 +243,32 @@ while run:
 
         #afficher le dialogue de départ
         if start_speak == False:
-            sound.dialogues(["-Que se passe t-il alors ?", "-Pourquoi suis-je dans ce vaisseau abandonné ? ", "-Je ne me souviens de rien...", "En plus la lumière à l'air éteinte..."], screen)
+            sound.dialogues(["-Que se passe t-il ?", "-Pourquoi suis-je dans ce vaisseau abandonné ? ", "-Je ne me souviens de rien...", "-En plus la lumière à l'air éteinte..."], screen)
             start_speak = True
         
         #si une porte est fermé et qu'on essaie de l'ouvrir sans rien
         if door_speak == True:
-            sound.dialogues([("La porte ne veut pas s'ouvrir, l'electricité à l'air coupée. Il n'y aurait pas", "quelque chose pour forcer la porte ?")], screen)
+            sound.dialogues([("-La porte ne veut pas s'ouvrir, l'electricité à l'air coupée. Il n'y aurait pas", "quelque chose pour forcer la porte ?")], screen)
             door_speak = False
 
         if not_enough_badge_speak == True:
             sound.dialogues(["Niveau de carte suplémentaire recquis"], screen)
             not_enough_badge_speak = False
 
+        if discover_cadaver == True:
+            sound.dialogues(["-Mais qu'est ce que c'est ? Un cadavre !!"], screen)
+            discover_cadaver_already = True
+            discover_cadaver = False
+
         #la revelation que c'est le personnage qui a fait ca
         if end_revelation == True:
-            sound.dialogues(["-Ne bouge pas !", "-Qui êtes vous", "-Tu es là pour terminer le travail, cest ca ?", "-Mais de quoi parlez vous ?", ("-Tu ne te souviens pas ? C'est toi qui a tué tout le monde, allez vas y,", "prend ma vie si tu n'a donc pas de coeur !")], screen)
+            sound.dialogues(["-Ne bouge pas !", "-Qui êtes vous", "-Tu es là pour terminer le travail, c'est ca ?", "-Mais de quoi parlez vous ?", ("-Tu ne te souviens pas ? C'est toi qui a tué tout le monde, allez vas-y,", "prends ma vie si tu n'a donc pas de coeur !")], screen)
             end_revelation = False
             end_revelation_already = True
 
         #le dilemme de fin
         if end_dilemma == True:
-            sound.dialogues([("En entrant dans la baie de lancement, vous être pris d'un grand remord", "suite à l'annonce que vous avez tué tout le monde"), ("Vous pouvez vous enfuir avec le vaisseau et garder votre peine à tout", "jamais..."), ("Ou vous asseoir sur la chaise et attendre la police pour qu'elle vienne", "vous prendre")], screen)
+            sound.dialogues([("-En entrant dans la baie de lancement, vous être pris d'un grand remord", "suite à l'annonce que vous avez tué tout le monde"), ("-Vous pouvez vous enfuir avec le vaisseau et garder votre peine à tout", "jamais..."), ("-Ou vous asseoir sur la chaise et attendre la police pour qu'elle vienne", "vous chercher")], screen)
             end_dilemma = False
             end_dilemma_already = True
 
@@ -301,6 +319,10 @@ while run:
             lock_counter += 1
         #dessiner le fond
         screen.blit(bg_img, (0, 0))
+        for prop in map.props:
+            prop.draw(screen)
+        room_draw.draw(screen)
+        screen.blit(pygame.transform.scale(text("appuyer sur E pour revenir au jeu", (0, 0, 0), "Comic Sans MS"), (300, 40)).convert_alpha(), (940, 40))
         #pour detecter si le joueur appuie sur les touche du clavier
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
