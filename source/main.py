@@ -59,7 +59,6 @@ sound_counter = 451
 def draw_badge_level(x, y, num):
    """fonction pour afficher le niveau de badge que possède le joueur"""
    screen.blit(pygame.transform.scale(pygame.image.load(f"images/items/level{num}.png"), (220, 140)), (x, y))
-
    
 def text(text, col=(255, 255, 255), pol="Arial"):
     """fonction pour afficher du texte"""
