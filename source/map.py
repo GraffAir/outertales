@@ -414,6 +414,10 @@ class Props:
         elif image == "fat_table":
             self.image = pygame.image.load(f"images/props/{image}.png").convert_alpha()
             self.image = pygame.transform.scale(self.image, (500, 100)).convert_alpha()
+        elif image == 'billard':
+            self.image = pygame.image.load(f"images/props/{image}.png").convert()
+            self.image = pygame.transform.scale(self.image, (160, 80)).convert_alpha()
+            self.image = pygame.transform.rotate(self.image, 90)
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = x, y
     
