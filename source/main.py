@@ -251,7 +251,7 @@ while run:
             not_enough_badge_speak = False
 
         if discover_cadaver == True:
-            sound.dialogues(["-Mais qu'est ce que c'est ? Un cadavre !!"], screen)
+            sound.dialogues(["-Mais qu'est ce que c'est ? Un cadavre !!", "-Il y a un tueur dans le vaisseau ?"], screen)
             discover_cadaver_already = True
             discover_cadaver = False
 
