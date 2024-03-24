@@ -123,11 +123,6 @@ while run:
                 if discover_cadaver == False:
                     if discover_cadaver_already == False:
                         discover_cadaver = True
-            
-            if rooms.room_num == 16:
-                bg_img = pygame.transform.scale(pygame.image.load("images/map/floor_labyrinthe.png"), (1280, 720)).convert()
-            else:
-                bg_img = pygame.transform.scale(pygame.image.load("images/map/floor.png"), (1280, 720)).convert()
 
             #faire en sorte que la porte qu'on vient de passer reste ouverte
             for exit in map.exits:
