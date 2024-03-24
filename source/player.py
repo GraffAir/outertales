@@ -301,7 +301,7 @@ class Player:
             if ship.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 4, self.image.get_height() + 4):
                 screen.blit(pygame.transform.scale(text("appuyer sur E pour aller dans le vaisseau"), (300, 40)).convert_alpha(), (940, 40))
                 if pygame.key.get_pressed()[pygame.K_e]:
-                    self.end = True
+                    ship.isCollide = True
 
         self.collisions(ship.rect)
 
@@ -311,7 +311,7 @@ class Player:
             if chair.rect.colliderect(self.rect.x + self.dx - 1, self.rect.y + self.dy - 1, self.image.get_width() + 4, self.image.get_height() + 4):
                 screen.blit(pygame.transform.scale(text("appuyer sur E pour rester sur la chaise"), (300, 40)).convert_alpha(), (940, 40))
                 if pygame.key.get_pressed()[pygame.K_e]:
-                    self.end2 = True
+                    chair.isCollide = True
 
         self.collisions(chair.rect)
 
@@ -350,8 +350,6 @@ class Player:
         self.not_enough_badge = False
         self.door_speak = False
         self.end_speak = end_speak
-        self.end = False
-        self.end2 = False
         #les variables qui symbolise le déplacement qui sera réalisé si possible
         self.dx, self.dy = 0, 0
         #on vérifie s'il appuie sur les touches de déplacements, et si oui on fait le deplaceement en question, et on change l'animation
@@ -460,5 +458,5 @@ class Player:
         
     def replace(self):
         """on change les variables qui ont été modifiés"""
-        return self.exits, self.items_map, self.chests, self.chests_open, self.archives, self.room_badge, self.room_x, self.room_y, self.lock, self.chest, self.archive, self.electricity, self.door_speak, self.end, self.end2, self.not_enough_badge
+        return self.exits, self.items_map, self.chests, self.chests_open, self.archives, self.room_badge, self.room_x, self.room_y, self.lock, self.chest, self.archive, self.electricity, self.door_speak, self.not_enough_badge
         

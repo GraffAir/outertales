@@ -460,6 +460,7 @@ class Ship:
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.isCollide = False
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
@@ -470,6 +471,7 @@ class Chair:
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.isCollide = False
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)

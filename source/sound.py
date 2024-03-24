@@ -5,9 +5,16 @@ def subTitles(texte, police, couleur, x, y, gras , italic , screen):
     """
     fonction qui permet d'afficher le texte les parametres sont : texte, police, coleur, x, y, gras (True ou False) et italic (True ou False)
     """
-    text_font = pygame.font.SysFont(police, 30, bold = gras, italic = italic)
-    img = text_font.render(texte, True, couleur)
-    screen.blit(img, (x,y))
+    if isinstance(texte, str):
+        text_font = pygame.font.SysFont(police, 30, bold = gras, italic = italic)
+        img = text_font.render(texte, True, couleur)
+        screen.blit(img, (x,y))
+    elif isinstance(texte, tuple):
+        text_font = pygame.font.SysFont(police, 30, bold = gras, italic = italic)
+        img = text_font.render(texte[0], True, couleur)
+        img2 = text_font.render(texte[1], True, couleur)
+        screen.blit(img, (x,y))
+        screen.blit(img2, (x, y + 40))
 
 def dialogues(liste_textes, screen):
     """
@@ -20,8 +27,8 @@ def dialogues(liste_textes, screen):
         rect.fill((0, 0, 0))  # Fill the rectangle with the clear color
         screen.blit(rect, (150, 500))  # Blit the rectangle onto the screen at position (0, 0)
         text_font2 = pygame.font.SysFont('Arial', 23, bold = False, italic = True)
-        img2 = text_font2.render("Appuyer sur ESPACE pour continuer", True, (0, 0, 0))
-        screen.blit(img2, (1280-img2.get_rect().width, 100-img2.get_rect().height))
+        img2 = text_font2.render("Appuyer sur ESPACE pour continuer", True, (255, 255, 255))
+        screen.blit(img2, (150+rect.get_rect().width-img2.get_rect().width, 500+rect.get_rect().height-img2.get_rect().height))
         subTitles(liste_textes[i], 'Arial', (255, 255, 255), 150, 500, False, True, screen)
         pygame.display.update()  # Update the display after rendering the text
         

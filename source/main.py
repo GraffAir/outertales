@@ -172,7 +172,7 @@ while run:
 
         #mettre à jour le joueur    
         player_.update(screen, room_draw, map.items_map, map.exits, map.signs, map.chests, map.chests_open, room_badge, rooms.room_num, rooms.room_x, rooms.room_y, map.electricity, map.props, map.archives, map.generator, map.ship, end_revelation_already, map.chair)
-        map.exits, map.items_map, map.chests, map.chests_open, map.archives, room_badge, rooms.room_x, rooms.room_y, open_lock_chest, watch_chest, watch_archives, map.electricity, door_speak, end1, end2, not_enough_badge_speak  = player_.replace()
+        map.exits, map.items_map, map.chests, map.chests_open, map.archives, room_badge, rooms.room_x, rooms.room_y, open_lock_chest, watch_chest, watch_archives, map.electricity, door_speak, not_enough_badge_speak  = player_.replace()
 
         #dessine la map
         room_draw.draw(screen)
@@ -192,12 +192,14 @@ while run:
         #s'il existe, afficher le vaisseau pour s'enfuir
         if map.ship != None:
             map.ship.draw(screen)
+            if map.ship.isCollide:
+                end1, game = True, False
 
         #si elle existe, afficher la chaise à la fin
         if map.chair != None:
             map.chair.draw(screen)
-
-        
+            if map.chair.isCollide:
+                end2, game = True, False
 
         #si on tente d'ouvrir un coffre vérouillé
         if open_lock_chest:
@@ -234,7 +236,7 @@ while run:
         
         #si une porte est fermé et qu'on essaie de l'ouvrir sans rien
         if door_speak == True:
-            sound.dialogues(["La porte ne veut pas s'ouvrir, l'electricité à l'air coupée. Il n'y aurait pas quelque chose pour forcer la porte ?"], screen)
+            sound.dialogues([("La porte ne veut pas s'ouvrir, l'electricité à l'air coupée. Il n'y aurait pas", "quelque chose pour forcer la porte ?")], screen)
             door_speak = False
 
         if not_enough_badge_speak == True:
@@ -243,13 +245,13 @@ while run:
 
         #la revelation que c'est le personnage qui a fait ca
         if end_revelation == True:
-            sound.dialogues(["-Ne bouge pas !", "-Qui etes vous", "Tu est la pour terminer le travail, cest ca ?", "mais de quoi parlez vous", "Tu ne te souviens pas ? C'est toi qui a tué tout le monde, allez vas y prend ma vie si tu n'a donc pas de coeur"], screen)
+            sound.dialogues(["-Ne bouge pas !", "-Qui êtes vous", "-Tu es là pour terminer le travail, cest ca ?", "-Mais de quoi parlez vous ?", ("-Tu ne te souviens pas ? C'est toi qui a tué tout le monde, allez vas y,", "prend ma vie si tu n'a donc pas de coeur !")], screen)
             end_revelation = False
             end_revelation_already = True
 
         #le dilemme de fin
         if end_dilemma == True:
-            sound.dialogues(["En entrant dans la baie de lancement, vous être pris d'un grand remord suite à l'annonce que vous avez tué tout le monde", "Vous pouvez vous enfuir avec le vaisseau et garder votre peine a tous jamais...", "Ou vous asseoir sur la chaise et attendre la police pour qu'elle vienne vous prendre"], screen)
+            sound.dialogues([("En entrant dans la baie de lancement, vous être pris d'un grand remord", "suite à l'annonce que vous avez tué tout le monde"), ("Vous pouvez vous enfuir avec le vaisseau et garder votre peine à tout", "jamais..."), ("Ou vous asseoir sur la chaise et attendre la police pour qu'elle vienne", "vous prendre")], screen)
             end_dilemma = False
             end_dilemma_already = True
 
@@ -296,7 +298,6 @@ while run:
 
     #si le joueur ouvre un coffre verouillé
     elif open_lock_chest:
-        fps = 25
         if lock_counter <= 14:
             lock_counter += 1
         #dessiner le fond
@@ -343,7 +344,6 @@ while run:
                             open_lock_chest = False
                             unlock_counter = 0
                             try_ = ""
-                            fps = 60
                     else:
                         try_ = ""
 
@@ -358,7 +358,6 @@ while run:
                 open_lock_chest = False
                 try_ = ""
                 lock_counter = 0
-                fps = 60
                 for ch in map.chests:
                     ch.try_open = False
 
@@ -455,7 +454,7 @@ while run:
         if 0 < outro_counter < 150:
             screen.blit(text("Vous vous enfuyez avec le vaisseau"), (640 - text("Vous vous enfuyez avec le vaisseau").get_rect().width/2, 720*1/4 - text("Vous vous enfuyez avec le vaisseau").get_rect().height))
         if  150 <= outro_counter < 300:
-            screen.blit(text("Vous mourrez de faim au bout de 48H"), (640 - text("Cependant vous mourrez de faim au bout de 48H").get_rect().width/2, 720*2/4 - text("Cependant vous mourrez de faim au bout de 48H").get_rect().height))
+            screen.blit(text("Vous mourrez de faim au bout de 48H"), (640 - text("Vous mourrez de faim au bout de 48H").get_rect().width/2, 720*2/4 - text("Vous mourrez de faim au bout de 48H").get_rect().height))
         if outro_counter == 300:
             screen.blit(text("GAME OVER", (255, 0, 0)), (640 - text("GAME OVER").get_rect().width/2, 720*3/4 - text("GAME OVER").get_rect().height))
 
